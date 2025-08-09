@@ -173,6 +173,35 @@ docker volume prune                   # 未使用ボリューム削除
 
 ### 本番環境での重要な設定
 
+#### 命名規則
+**多くのオープンソースプロジェクトではケバブケース（kebab-case）が使用される**
+
+```yaml
+# 推奨：ケバブケース（kebab-case）
+services:
+  web-app:        # ハイフンで区切る
+    image: nginx
+  api-server:     # 複数単語もハイフンで繋ぐ
+    image: node
+  worker-queue:
+    image: redis
+
+volumes:
+  app-data:       # ボリュームもケバブケース
+  log-files:
+  backup-storage:
+
+networks:
+  frontend-net:   # ネットワークもケバブケース
+  backend-net:
+```
+
+**理由：**
+- **可読性**: 単語の区切りが明確
+- **一貫性**: Kubernetesなど他のツールとの統一
+- **標準的**: 多くのOSSプロジェクトで採用
+- **URL安全**: ハイフンはURL内で安全に使用可能
+
 #### restart ポリシー
 **`restart: unless-stopped`** は本番環境では必須の設定
 
@@ -265,7 +294,7 @@ services:
         reservations:
           memory: 256M
     
-    # ヘルスチェック
+    # ヘルスチェック（重要）
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
@@ -288,6 +317,95 @@ services:
       - /tmp
 ```
 
+#### ヘルスチェックの詳細設定
+
+**ヘルスチェックとは：**
+- コンテナの健全性を定期的に監視する仕組み
+- サービスが正常に動作しているかを自動確認
+- 異常時の自動復旧やロードバランサーからの除外に活用
+
+**設定パラメータ：**
+- `test`: 実行するヘルスチェックコマンド
+- `interval`: チェック間隔（デフォルト: 30s）
+- `timeout`: タイムアウト時間（デフォルト: 30s）
+- `retries`: 失敗の許容回数（デフォルト: 3）
+- `start_period`: 初回チェックまでの猶予時間（デフォルト: 0s）
+
+**サービス別ヘルスチェック例：**
+
+```yaml
+services:
+  # Webアプリケーション
+  web:
+    image: nginx:latest
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # MySQL データベース
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: secretpassword
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-p$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # PostgreSQL データベース
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_PASSWORD: secretpassword
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:6-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # Node.js API
+  api:
+    image: node:16-alpine
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+```
+
+**ヘルスチェック状態の確認：**
+```bash
+# コンテナの健康状態確認
+docker ps
+
+# 詳細なヘルスチェック履歴
+docker inspect <container_name> | grep -A 20 "Health"
+
+# Docker Composeでの確認
+docker-compose ps
+```
+
+**ヘルスチェックのベストプラクティス：**
+- **軽量なチェック**: 過度に重い処理は避ける
+- **適切な間隔**: あまり頻繁すぎるとリソース消費が大きい
+- **依存関係を考慮**: DBが起動してからAPIをチェック
+- **適切なタイムアウト**: ネットワーク遅延を考慮した設定
+
 **実際の運用例：**
 ```bash
 # 本番環境での起動
@@ -305,6 +423,53 @@ docker-compose restart app
 # 設定変更後の再デプロイ
 docker-compose pull
 docker-compose up -d
+```
+
+### Docker Composeの停止・削除
+
+```bash
+# 基本的な停止（コンテナを停止、削除しない）
+docker-compose stop
+
+# 停止と削除（コンテナとネットワークを削除）
+docker-compose down
+
+# 特定のサービスのみ停止
+docker-compose stop web
+
+# ボリュームも含めて完全削除
+docker-compose down -v
+
+# イメージも削除（開発環境のクリーンアップ）
+docker-compose down --rmi all
+
+# 孤立したコンテナも削除
+docker-compose down --remove-orphans
+
+# 強制停止（緊急時）
+docker-compose kill
+
+# プロダクションファイル指定での停止
+docker-compose -f docker-compose.prod.yml down
+```
+
+**stopとdownの違い：**
+- `stop`: コンテナを停止するが、コンテナとネットワークは残る
+- `down`: コンテナを停止し、コンテナとネットワークを削除する
+
+**本番環境での推奨手順：**
+```bash
+# 1. まず状態確認
+docker-compose ps
+
+# 2. ログを確認（必要に応じて）
+docker-compose logs
+
+# 3. グレースフルシャットダウン
+docker-compose down
+
+# 4. 完全停止の確認
+docker ps -a | grep <project_name>
 ```
 
 ## Dangling（ダングリング）リソース
