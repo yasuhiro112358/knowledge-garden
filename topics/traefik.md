@@ -46,6 +46,24 @@ labels:
 - Services: バックエンド（アプリ）群への負荷分散設定（port、servers、sticky 等）
 - Providers: 設定の取得元（Docker、Kubernetes、File）。変更を検知して自動反映
 
+## Traefikの歴史（ざっくり年表）
+- 2015年: Containous 社が Traefik v1.0 を公開 — コンテナ時代のリバースプロキシ／LBとして登場、Docker/Marathon/K8s 連携を訴求
+- 2016年: Docker Swarm・Kubernetes サポート拡充 — docker.sock を読み取りコンテナ自動検出・ルーティング生成
+- 2017年: v1.3〜v1.7 で機能拡張 — Let’s Encrypt 自動証明書、ACME DNS、カナリア、ヘルスチェックなど
+- 2018年: K8s Ingress Controller として採用増 — v1 系が安定し、Nginxからの移行例が増える
+- 2019年: Traefik v2.0 — ルーター/ミドルウェア/サービスの3層モデル、K8s CRD、TCP/UDPプロキシ対応
+- 2020年: 社名を Containous → Traefik Labs に変更 — 商用版 Traefik Enterprise 提供開始
+- 2021年: v2.x がデファクト化 — Docker/K8s両対応とダイナミック設定が評価
+- 2023年: v3.0 プレリリース — HTTP/3 対応、性能改善、設定簡素化
+- 2024年: v3.0 安定版リリース — セキュリティ強化（例: TLS 1.3 デフォルト化）、プラグインエコシステム拡充
+
+### 選定への示唆
+- Docker/Kubernetes とネイティブ統合された自動化（検出・再読込不要）
+- ACME/Let’s Encrypt を内蔵し HTTPS 運用コストを大幅削減
+- v2 の柔軟なルーティングとミドルウェアで多様な要件に対応
+- TCP/UDP 対応で gRPC や一部非HTTPプロトコルも取り扱い可能
+- OSS と Enterprise の選択肢があり、規模拡大にも対応
+
 ## 技術選定の考え方
 - 目的とユースケース
   - 複数サービスをDockerで運用し、追加・変更が頻繁 → Traefikが適切（自動検出/自動HTTPS）
@@ -83,6 +101,67 @@ labels:
 - 各サービスに正しいHost/Pathルールと`loadbalancer.server.port`
 - healthcheckと`restart: unless-stopped`設定を確認
 - バックアップ対象: acme.json、Traefik設定、Composeファイル
+
+## 開発環境向け 最小構成（v3.5）
+ローカル開発でTraefikを最短で試すための最小セット。ダッシュボードを`http://localhost:8080`で有効化します（開発専用）。
+
+docker-compose.yml（抜粋）:
+```yaml
+services:
+  traefik:
+    image: traefik:v3.5
+    ports:
+      - "80:80"
+      - "8080:8080"  # Traefik Dashboard
+    volumes:
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+```
+
+静的設定ファイル `traefik.yml`:
+```yaml
+api:
+  dashboard: true
+  insecure: true
+
+entryPoints:
+  web:
+    address: ":80"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+```
+
+解説:
+- image: traefik:v3.5 — v3系の安定版を使用
+- ports: 80はHTTP入口、8080はダッシュボード（開発のみ開放）
+- volumes:
+  - ./traefik.yml — 静的設定（エントリポイント/ダッシュボード/プロバイダ）
+  - /var/run/docker.sock:ro — Dockerプロバイダがコンテナを自動検出（本番はsocket-proxy推奨）
+- api.insecure: true — ダッシュボードを認証なしで公開する開発用フラグ（本番では禁止）
+- entryPoints.web: ":80" — HTTP入口を定義
+- providers.docker.exposedByDefault: false — ラベルで明示したサービスのみ公開（安全側）
+
+アプリを公開する最小ラベル例（開発）:
+```yaml
+services:
+  my-app:
+    image: yourorg/app:dev
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.my-app.entrypoints=web
+      - traefik.http.routers.my-app.rule=Host(`app.localhost`)
+      - traefik.http.services.my-app.loadbalancer.server.port=3000
+```
+- Host(`app.localhost`) はローカルで 127.0.0.1 に解決されるため便利
+- アプリ内部のリッスンポート（例:3000）を `loadbalancer.server.port` に指定
+
+注意（本番との違い）:
+- ダッシュボードは `insecure: true` にしない。HTTPS化と認証で保護
+- Let’s Encrypt などの証明書自動取得は本構成には含めない（本番構成で追加）
+- docker.sock は直接マウントせず、`docker-socket-proxy` の使用を検討
 
 ## よく使う構成（Docker Compose）
 以下は本番でも使える最小構成例。自動 HTTPS、HTTP→HTTPS リダイレクト、ダッシュボード保護などを含む。
