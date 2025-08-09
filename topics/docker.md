@@ -14,6 +14,11 @@ Dockerに関する知識とメモ
 - コンテナが削除されてもデータが保持される
 - ホストとコンテナ間でファイルを共有できる
 
+**重要な概念：**
+- **コンテナ自体はデータを永続化できない** - コンテナ削除でデータも消失
+- **ボリュームでデータの永続化を実現** - コンテナとは独立してデータを保存
+- **本番環境でのデータ保護** - サーバーデプロイ時もボリューム設定でデータを保持
+
 #### ボリュームの種類
 1. **名前付きボリューム（Named Volumes）**
    - Dockerが管理する永続化ストレージ
@@ -83,22 +88,79 @@ docker run --rm -it -v my-volume:/data alpine:latest sh
 - ホストから直接アクセスするのは推奨されない
 - ボリューム内のデータにアクセスしたい場合は、コンテナ経由でアクセスすることを推奨
 
+#### 本番環境でのボリューム活用
+**データ永続化の重要性：**
+```bash
+# 開発環境
+docker run -v $(pwd)/data:/app/data myapp
+
+# 本番環境（Docker Compose例）
+version: '3.8'
+services:
+  web:
+    image: myapp
+    volumes:
+      - app-data:/app/data
+      - /opt/config:/app/config  # ホストの設定ファイル
+  
+  db:
+    image: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  app-data:     # 名前付きボリューム（Dockerが管理）
+  postgres-data: # DBデータの永続化
+```
+
+**クラウド環境での考慮点：**
+- AWS: EBS Volume, EFS
+- GCP: Persistent Disk
+- Azure: Azure Disk
+- Kubernetes: PersistentVolume (PV) / PersistentVolumeClaim (PVC)
+
 ## よく使うコマンド
 
+### 基本操作
 ```bash
 # コンテナ一覧
-docker ps
+docker ps                             # 実行中のコンテナ
+docker ps -a                          # すべてのコンテナ
 
 # イメージ一覧
 docker images
 
 # コンテナ起動
-docker run
+docker run <image_name>
 
 # コンテナ停止
-docker stop
+docker stop <container_name_or_id>
 
-# ボリューム関連コマンド
+# コンテナ削除
+docker rm <container_name_or_id>
+```
+
+### 実行中のコンテナに入る
+```bash
+# 基本的な方法（bashで入る）
+docker exec -it <container_name_or_id> /bin/bash
+
+# shで入る（bashが使えない場合）
+docker exec -it <container_name_or_id> /bin/sh
+
+# 特定のユーザーで入る
+docker exec -it --user root <container_name_or_id> /bin/bash
+
+# 作業ディレクトリを指定して入る
+docker exec -it --workdir /app <container_name_or_id> /bin/bash
+
+# 一時的にコマンドを実行（コンテナに入らない）
+docker exec <container_name_or_id> ls -la
+docker exec <container_name_or_id> cat /etc/os-release
+```
+
+### ボリューム関連コマンド
+```bash
 docker volume create <volume_name>    # ボリューム作成
 docker volume ls                      # ボリューム一覧
 docker volume rm <volume_name>        # ボリューム削除
@@ -108,6 +170,188 @@ docker volume prune                   # 未使用ボリューム削除
 ## Dockerfile
 
 ## Docker Compose
+
+### 本番環境での重要な設定
+
+#### restart ポリシー
+**`restart: unless-stopped`** は本番環境では必須の設定
+
+**restart ポリシーの種類：**
+- **no**: 再起動しない（デフォルト）
+- **always**: 常に再起動（Docker起動時も含む）
+- **on-failure**: 異常終了時のみ再起動
+- **unless-stopped**: 手動で停止するまで再起動（**推奨**）
+
+```yaml
+# 本番環境での推奨設定例
+version: '3.8'
+services:
+  web:
+    image: nginx:latest
+    restart: unless-stopped  # 重要：自動復旧設定
+    ports:
+      - "80:80"
+    volumes:
+      - web-data:/usr/share/nginx/html
+      - /opt/config/nginx:/etc/nginx/conf.d:ro
+    depends_on:
+      - app
+  
+  app:
+    image: myapp:latest
+    restart: unless-stopped  # 重要：自動復旧設定
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - app-data:/app/data
+    depends_on:
+      - db
+  
+  db:
+    image: postgres:13
+    restart: unless-stopped  # 重要：自動復旧設定
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    secrets:
+      - db_password
+
+volumes:
+  web-data:
+  app-data:
+  postgres-data:
+
+secrets:
+  db_password:
+    external: true
+```
+
+#### なぜ unless-stopped が推奨なのか？
+
+**メリット：**
+- **サーバー再起動時**: 自動でコンテナが起動
+- **コンテナクラッシュ時**: 自動で復旧
+- **手動制御可能**: `docker stop` で明示的に停止可能
+- **意図しない起動回避**: 手動停止したコンテナは起動時に自動起動しない
+
+**always との違い：**
+```bash
+# unless-stopped の場合
+docker stop my-container  # 手動停止
+# → サーバー再起動時も起動しない
+
+# always の場合  
+docker stop my-container  # 手動停止
+# → サーバー再起動時に自動起動してしまう
+```
+
+#### 本番環境でのその他重要設定
+
+```yaml
+services:
+  app:
+    image: myapp:latest
+    restart: unless-stopped
+    
+    # リソース制限（重要）
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          memory: 256M
+    
+    # ヘルスチェック
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    # ログ設定
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # セキュリティ設定
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+```
+
+**実際の運用例：**
+```bash
+# 本番環境での起動
+docker-compose -f docker-compose.prod.yml up -d
+
+# サービス状態確認
+docker-compose ps
+
+# ログ確認
+docker-compose logs -f --tail=100
+
+# 特定サービスの再起動
+docker-compose restart app
+
+# 設定変更後の再デプロイ
+docker-compose pull
+docker-compose up -d
+```
+
+## Dangling（ダングリング）リソース
+
+### Danglingとは
+「ぶら下がっている」という意味で、**参照されなくなった孤立したリソース**を指す。ディスク容量を無駄に消費するため、定期的にクリーンアップが必要。
+
+#### Dangling Images（ダングリングイメージ）
+- 同じタグで新しいイメージをビルドした時、古いイメージがタグを失う
+- `docker build`で同じタグを何度も使用した場合に発生
+
+```bash
+# ダングリングイメージの確認
+docker images -f dangling=true
+
+# ダングリングイメージの削除
+docker image prune
+docker image prune -f  # 確認なしで削除
+```
+
+#### Dangling Volumes（ダングリングボリューム）
+- コンテナ削除後も残ったボリューム
+- 明示的に削除しない限り残り続ける
+
+```bash
+# ダングリングボリュームの確認
+docker volume ls -f dangling=true
+
+# ダングリングボリュームの削除
+docker volume prune
+docker volume prune -f  # 確認なしで削除
+```
+
+#### 全体的なクリーンアップ
+```bash
+# すべての未使用リソースを確認
+docker system df
+
+# すべての未使用リソースを削除
+docker system prune
+
+# より積極的なクリーンアップ（未使用イメージも含む）
+docker system prune -a
+
+# 未使用ネットワークの削除
+docker network prune
+```
 
 ## トラブルシューティング
 
