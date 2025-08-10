@@ -171,6 +171,195 @@ docker volume prune                   # 未使用ボリューム削除
 
 ## Docker Compose
 
+### マルチサービス構成の基本
+
+#### app + web の一般的な構成パターン
+**典型的な構成：**
+- **web**: リバースプロキシ（Nginx など）- 静的ファイル配信、SSL終端、リクエスト振り分け
+- **app**: アプリケーションサーバー（Node.js、Python、PHP など）- ビジネスロジック処理
+
+**なぜ分けるのか？**
+- **責任分離**: 静的ファイル配信とアプリロジックを分離
+- **パフォーマンス**: Nginxが静的ファイルを高速配信、アプリは動的処理に専念
+- **スケーラビリティ**: webとappを独立してスケール可能
+- **セキュリティ**: 外部からの直接アクセスはwebのみ、appは内部ネットワークで保護
+
+```yaml
+version: '3.8'
+services:
+  # Webサーバー（フロントエンド）
+  web:
+    image: nginx:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"      # 外部からのアクセスはwebのみ
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - static-files:/usr/share/nginx/html
+    depends_on:
+      - app          # appサービスが起動してからwebを起動
+    networks:
+      - frontend     # 外部ネットワーク
+      - backend      # 内部ネットワーク（appとの通信用）
+
+  # アプリケーションサーバー（バックエンド）
+  app:
+    image: node:16-alpine
+    restart: unless-stopped
+    # ポート公開なし（外部から直接アクセス不可）
+    expose:
+      - "3000"       # 内部ネットワークでのみアクセス可能
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - app-data:/app/data
+      - static-files:/app/public  # 静的ファイルをwebと共有
+    networks:
+      - backend      # 内部ネットワークのみ
+      - db-network   # データベースとの通信用
+
+  # データベース
+  db:
+    image: postgres:13
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - db-network   # アプリとの通信専用
+    secrets:
+      - db_password
+
+# ネットワーク定義（サービス間通信の設定）
+networks:
+  frontend:        # 外部アクセス用
+    driver: bridge
+  backend:         # web ↔ app 通信用
+    driver: bridge
+    internal: true # 外部からアクセス不可
+  db-network:      # app ↔ db 通信用
+    driver: bridge
+    internal: true # 外部からアクセス不可
+
+volumes:
+  app-data:
+  postgres-data:
+  static-files:    # webとappで共有
+
+secrets:
+  db_password:
+    external: true
+```
+
+#### サービス間通信の仕組み
+
+**1. ネットワークレベルでの通信制御**
+```yaml
+networks:
+  backend:
+    driver: bridge
+    internal: true  # 外部からアクセス不可、内部通信のみ
+```
+
+**2. サービス名での名前解決**
+- Docker Compose内では**サービス名がホスト名**として機能
+- 例：webサービスからappサービスへは `http://app:3000` でアクセス
+
+**3. Nginxの設定例（web → app への通信）**
+```nginx
+# nginx.conf
+server {
+    listen 80;
+    server_name localhost;
+
+    # 静的ファイル（CSS、JS、画像など）
+    location /static/ {
+        alias /usr/share/nginx/html/;
+        expires 30d;
+    }
+
+    # API リクエストをappサービスにプロキシ
+    location /api/ {
+        proxy_pass http://app:3000/;  # サービス名'app'で通信
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # その他のリクエストもappにプロキシ
+    location / {
+        proxy_pass http://app:3000/;  # サービス名'app'で通信
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+**4. 通信フロー**
+```
+外部クライアント → web:80/443 → app:3000 → db:5432
+               ↑               ↑           ↑
+           外部公開          内部通信      内部通信
+```
+
+**5. 依存関係とヘルスチェック**
+```yaml
+services:
+  web:
+    depends_on:
+      - app        # app起動後にweb起動
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+
+  app:
+    depends_on:
+      - db         # db起動後にapp起動
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:3000/health"]
+
+  db:
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user"]
+```
+
+#### 実際の運用での確認方法
+
+**サービス間通信のテスト：**
+```bash
+# webコンテナからappへの通信確認
+docker-compose exec web curl http://app:3000/health
+
+# appコンテナからdbへの通信確認
+docker-compose exec app nc -zv db 5432
+
+# ネットワーク情報確認
+docker network ls
+docker network inspect <project_name>_backend
+
+# サービス間のネットワーク接続確認
+docker-compose exec web nslookup app
+```
+
+**ログでの通信確認：**
+```bash
+# 全サービスのログ
+docker-compose logs -f
+
+# 特定サービスのログ
+docker-compose logs -f web
+docker-compose logs -f app
+
+# リアルタイムでの通信監視
+docker-compose exec web tail -f /var/log/nginx/access.log
+```
+
 ### 本番環境での重要な設定
 
 #### 命名規則
