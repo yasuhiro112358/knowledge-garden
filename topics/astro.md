@@ -212,3 +212,6 @@ CMD ["serve", "-s", "dist", "-l", "4321"]
 ## 参考
 - 公式: https://docs.astro.build/
 - 使用例など、概要が掴める: https://qiita.com/udayaan/items/24ecb2f5f4608fc1df4c
+
+プロジェクトの初期段階でやることが書いてある
+https://docs.astro.build/en/guides/configuring-astro/#common-new-project-tasks
