@@ -140,6 +140,17 @@ ls -l "$(which <command>)"
 - ユーザー個人専用のローカル領域として使われる慣習
 - macOSでは標準で作成されないが、作って使うのは一般的
 
+### 既存の `~/.local/bin` と干渉したくない場合
+- `~/.local/mybin` のように **自分専用のサブディレクトリ**を作る
+- PATH にはその専用ディレクトリだけを追加する
+- ドットファイルリポの `bin/` をそこへシンボリックリンクする運用が安全
+
+例:
+```bash
+mkdir -p ~/.local/mybin
+echo 'export PATH="$HOME/.local/mybin:$PATH"' >> ~/.zshrc
+```
+
 PATH 追加例（zsh）:
 ```bash
 mkdir -p ~/.local/bin
