@@ -130,6 +130,24 @@ command -v <command>
 ls -l "$(which <command>)"
 ```
 
+## 自作CLI/スクリプトの置き場所
+### 目的別のおすすめ
+- 自分だけで使う: `~/.local/bin` か `~/bin`
+- チーム/複数ユーザー: `/usr/local/bin`（管理者権限が必要）
+- プロジェクト専用: `./scripts/` や `./bin/`（リポジトリ内）
+
+### `~/.local` とは
+- ユーザー個人専用のローカル領域として使われる慣習
+- macOSでは標準で作成されないが、作って使うのは一般的
+
+PATH 追加例（zsh）:
+```bash
+mkdir -p ~/.local/bin
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+```
+
+関連用語: XDG Base Directory（`topics/glossary.md`）
+
 ## 実用メモ
 - どこに入っているか確認するなら:
 ```bash
