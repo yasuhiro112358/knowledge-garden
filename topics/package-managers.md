@@ -15,6 +15,8 @@
 - Fedora/RHEL: DNF
 - Arch: pacman
 
+関連ノート: `topics/homebrew.md`
+
 ## まず覚える基本コマンド（最小セット）
 macOS (Homebrew):
 ```bash
