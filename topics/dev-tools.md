@@ -13,6 +13,26 @@
 - ○: よく使われる定番
 - △: 用途や環境次第
 
+## パッケージ管理ツール（詳細）
+別ファイルに整理: `topics/package-managers.md`
+
+## 超定番リスト（これだけは使っておけ）
+※ 「定番」は開発者調査の利用率データを根拠にしている。
+
+| カテゴリ | ツール | なぜ超定番か | 競合/補足 |
+| --- | --- | --- | --- |
+| バージョン管理 | Git | 開発者調査でGitが圧倒的に使われている | 競合はSVNなど（ただし比率は小さい） |
+| エディタ/IDE | Visual Studio Code | 2023調査で最も利用されるIDE | JetBrains系、Vim/Neovim、Visual Studio |
+| コンテナ | Docker | 主要な開発ツールの中で利用率が高い | Podman, Rancher Desktop |
+| ホスティング | GitHub | 主要なバージョン管理プラットフォームで利用率が最も高い | GitLab, Bitbucket |
+| パッケージ管理 | Homebrew / APT / Chocolatey など | OS標準/代表的なパッケージ管理が広く使われている | OSごとの標準に合わせる |
+
+根拠メモ（調査データ）:
+- Git利用率とGitHubの利用率が高い（Stack Overflow Developer Survey 2022）。
+- VS CodeがIDEで最も利用されている（Stack Overflow Developer Survey 2023）。
+- Dockerが開発ツールとして高い利用率に含まれる（Stack Overflow Developer Survey 2023）。
+- Homebrew / APT / Chocolatey などが開発ツールの利用一覧に含まれる（Stack Overflow Developer Survey 2023）。
+
 ## インストール済みツールの整理
 ※ OS要件は変わるため、導入時に公式サイトの最新情報を確認する。
 
