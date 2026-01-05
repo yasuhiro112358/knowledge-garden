@@ -3,14 +3,9 @@
 ## 概要
 Firebaseは、Googleが提供するモバイルおよびウェブアプリケーション開発のためのプラットフォーム。バックエンドサービス、SDK、UIライブラリを通じて、開発者が迅速かつ効率的にアプリケーションを構築できるよう支援する。
 
-**主な特徴：**
-- サーバー管理の負担を軽減
-- リアルタイム同期機能
-- スケーラビリティ
-- 多様な認証方法のサポート
-- サーバーレス機能
+BaaS全般の比較については `topics/baas.md` を参照。
 
-## 主なサービス
+## Firebaseの主なサービス
 
 ### Cloud Firestore
 - 柔軟でスケーラブルなNoSQLクラウドデータベース
@@ -346,19 +341,6 @@ firebase functions:log
 firebase functions:log --only helloWorld
 ```
 
-## 料金・無料枠
-
-### 無料枠（Spark プラン）
-- Firestore: 読み取り 50,000回/日、書き込み 20,000回/日
-- Storage: 5GB保存、1GB/日ダウンロード
-- Hosting: 10GB保存、360MB/日転送
-- Functions: 125,000回/月、40,000GB秒/月
-- Authentication: 無料（制限なし）
-
-**注意点：**
-- 無料枠を超えると従量課金
-- 本番運用前に料金を確認すること
-
 ## ベストプラクティス
 
 ### データベース設計
@@ -405,4 +387,3 @@ firebase functions:log --only helloWorld
 - [Firestore データモデル](https://firebase.google.com/docs/firestore/data-model)
 - [Firebase Authentication](https://firebase.google.com/docs/auth)
 - [Cloud Functions](https://firebase.google.com/docs/functions)
-
