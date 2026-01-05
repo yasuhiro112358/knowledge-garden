@@ -117,3 +117,41 @@
 - **使用例:**
   - 多くの企業やスタートアップで採用されている
   - GitHub、Netflix、Airbnb、PayPalなどがGraphQLを使用（Apollo Serverを直接使用しているかは不明）
+
+## ストアドプロシージャ (Stored Procedure)
+- データベースサーバー内に保存された、一連のSQL文をまとめたプログラム
+- データベース内で定義・保存され、必要に応じて呼び出して実行する
+- **主な特徴:**
+  - **再利用性**: 一度定義すれば、何度でも呼び出し可能
+  - **パフォーマンス**: データベースサーバー側で実行されるため、ネットワーク通信が少なく高速
+  - **セキュリティ**: アプリケーションから直接SQLを実行せず、プロシージャ経由でアクセスできる
+  - **ビジネスロジックの集約**: 複雑な処理をデータベース側に集約できる
+- **メリット:**
+  - ネットワーク通信の削減（複数のSQL文を1回の呼び出しで実行）
+  - SQLインジェクション攻撃のリスク低減
+  - ビジネスロジックの一元管理
+  - トランザクション処理の簡素化
+- **デメリット:**
+  - データベースに依存するため、移植性が低い場合がある
+  - デバッグが難しい場合がある
+  - バージョン管理が複雑になる場合がある
+- **使用例:**
+  ```sql
+  -- PostgreSQLの例
+  CREATE OR REPLACE FUNCTION get_user_orders(user_id INTEGER)
+  RETURNS TABLE(order_id INTEGER, order_date DATE, total_amount DECIMAL)
+  AS $$
+  BEGIN
+    RETURN QUERY
+    SELECT o.id, o.order_date, o.total
+    FROM orders o
+    WHERE o.user_id = get_user_orders.user_id;
+  END;
+  $$ LANGUAGE plpgsql;
+  ```
+- **対応データベース:**
+  - PostgreSQL（PL/pgSQL）
+  - MySQL（ストアドプロシージャ、ストアドファンクション）
+  - SQL Server（T-SQL）
+  - Oracle（PL/SQL）
+- **注意:** NoSQLデータベース（Firestore、MongoDBなど）では、ストアドプロシージャの概念が異なるか、存在しない場合がある
