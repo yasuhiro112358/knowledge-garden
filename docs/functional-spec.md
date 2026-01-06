@@ -24,7 +24,7 @@ Knowledge Garden公開サイトは、Markdownファイルで管理されたナ�
 ### 2.2 データフロー
 
 ```
-Markdownファイル (topics/*.md, daily/*.md)
+Markdownファイル (src/content/topics/*.md, src/content/daily/*.md)
     ↓
 ユーティリティ関数 (getTopics, getDailyNotes)
     ↓
@@ -47,13 +47,13 @@ Xserver VPS (Traefik + Docker)
 
 #### 3.1.1 トピック一覧ページ
 
-**機能**: `topics/`ディレクトリ内のすべてのMarkdownファイルを読み込み、一覧表示する
+**機能**: `src/content/topics/`ディレクトリ内のすべてのMarkdownファイルを読み込み、一覧表示する
 
 **入力**:
-- `topics/`ディレクトリ内の`.md`ファイル
+- `src/content/topics/`ディレクトリ内の`.md`ファイル
 
 **処理**:
-1. `topics/`ディレクトリをスキャン
+1. `src/content/topics/`ディレクトリをスキャン
 2. 各`.md`ファイルを読み込み
 3. frontmatterを解析（gray-matter）
 4. タイトルを取得（frontmatterの`title`、または最初のH1、またはファイル名）
@@ -83,11 +83,10 @@ Xserver VPS (Traefik + Docker)
 - URLパラメータ: `slug`（ファイル名から`.md`を除いたもの）
 
 **処理**:
-1. `topics/[slug].md`ファイルを読み込み
+1. `src/content/topics/[slug].md`ファイルを読み込み
 2. frontmatterとコンテンツを分離
-3. MarkdownをHTMLに変換
-4. 画像パスを変換（`../img/` → `/img/`）（サブドメイン方式のため）
-5. シンタックスハイライトを適用
+3. MarkdownをHTMLに変換（画像パスは既に `/img/` 形式で記述されている）
+4. シンタックスハイライトを適用
 
 **出力**:
 - タイトル
@@ -113,13 +112,13 @@ Xserver VPS (Traefik + Docker)
 
 #### 3.2.1 日次ノート一覧ページ
 
-**機能**: `daily/`ディレクトリ内のすべてのMarkdownファイルを読み込み、一覧表示する
+**機能**: `src/content/daily/`ディレクトリ内のすべてのMarkdownファイルを読み込み、一覧表示する
 
 **入力**:
-- `daily/`ディレクトリ内の`.md`ファイル
+- `src/content/daily/`ディレクトリ内の`.md`ファイル
 
 **処理**:
-1. `daily/`ディレクトリをスキャン
+1. `src/content/daily/`ディレクトリをスキャン
 2. 各`.md`ファイルを読み込み
 3. frontmatterを解析
 4. タイトルを取得（frontmatterの`title`、または最初のH1、またはファイル名）
@@ -150,11 +149,10 @@ Xserver VPS (Traefik + Docker)
 - URLパラメータ: `slug`（ファイル名から`.md`を除いたもの）
 
 **処理**:
-1. `daily/[slug].md`ファイルを読み込み
+1. `src/content/daily/[slug].md`ファイルを読み込み
 2. frontmatterとコンテンツを分離
-3. MarkdownをHTMLに変換
-4. 画像パスを変換
-5. シンタックスハイライトを適用
+3. MarkdownをHTMLに変換（画像パスは既に `/img/` 形式で記述されている）
+4. シンタックスハイライトを適用
 
 **出力**:
 - タイトル
@@ -201,10 +199,9 @@ Xserver VPS (Traefik + Docker)
 #### 3.4.2 画像パス変換
 
 **処理**:
-1. Markdown形式の画像: `![alt](../img/path.png)` → `![alt](/img/path.png)`（サブドメイン方式のため）
-2. HTML形式の画像: `<img src="../img/path.png">` → `<img src="/img/path.png">`（サブドメイン方式のため）
-3. 正規表現を使用してパスを置換
-4. ベースパス（`import.meta.env.BASE_URL`）に応じて自動的に変換される
+1. Markdownファイル内では画像パスを `/img/` から始まる絶対パスで記述する（例: `/img/screenshots/image.png`）
+2. Astroの標準構成に従い、`public/img/` に配置された画像がそのまま配信される
+3. パス変換は不要（Markdownファイル内で既に正しいパスで記述されている）
 
 #### 3.4.3 シンタックスハイライト
 

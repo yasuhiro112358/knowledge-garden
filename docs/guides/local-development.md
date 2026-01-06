@@ -57,30 +57,30 @@ npm run dev
 
 開発サーバーは自動的にファイルの変更を検知して、ブラウザを自動リロードします。
 
-1. `topics/` や `daily/` ディレクトリのMarkdownファイルを編集
+1. `src/content/topics/` や `src/content/daily/` ディレクトリのMarkdownファイルを編集
 2. ブラウザが自動的にリロードされる
 3. 変更が反映されていることを確認
 
 ### 新しいトピックの追加
 
-1. `topics/` ディレクトリに新しいMarkdownファイルを作成（例: `topics/new-topic.md`）
+1. `src/content/topics/` ディレクトリに新しいMarkdownファイルを作成（例: `src/content/topics/new-topic.md`）
 2. ファイルを保存
 3. ブラウザで `http://localhost:4321/topics/new-topic` にアクセスして確認
 
 ### 新しい日次ノートの追加
 
-1. `daily/` ディレクトリに新しいMarkdownファイルを作成（例: `daily/2025-01-15.md`）
+1. `src/content/daily/` ディレクトリに新しいMarkdownファイルを作成（例: `src/content/daily/2025-01-15.md`）
 2. ファイルを保存
 3. ブラウザで `http://localhost:4321/daily/2025-01-15` にアクセスして確認
 
 ### 画像の追加
 
-1. `img/` ディレクトリに画像を配置（例: `img/screenshots/test.png`）
+1. `public/img/` ディレクトリに画像を配置（例: `public/img/screenshots/test.png`）
 2. Markdownファイル内で以下のように参照：
    ```markdown
-   ![説明](../img/screenshots/test.png)
+   ![説明](/img/screenshots/test.png)
    ```
-3. 開発サーバーが自動的に画像をコピーして表示
+3. 開発サーバーが自動的に画像を表示（Astroの標準構成）
 
 ## ビルドとプレビュー
 
@@ -135,7 +135,8 @@ npm install
 ### 画像が表示されない
 
 **対処**:
-1. 画像パスが `../img/` で始まっているか確認
+1. 画像パスが `/img/` で始まる絶対パスになっているか確認
+2. 画像ファイルが `public/img/` に配置されているか確認
 2. 開発サーバーを再起動：
    ```bash
    # Ctrl+Cで停止してから
@@ -160,15 +161,16 @@ npm install
 
 ### ファイル構成
 
-- `topics/` - 技術的なまとめ（体系的に整理）
-- `daily/` - 日々のメモ（気軽に記録）
+- `src/content/topics/` - 技術的なまとめ（体系的に整理）
+- `src/content/daily/` - 日々のメモ（気軽に記録）
+- `public/img/` - 画像ファイル（そのまま配信される）
 - `snippets/` - 再利用可能なコードやコマンド
 - `templates/` - テンプレートファイル
 
 ### Markdownの書き方
 
 - 見出しは `#` から始める（`#` がトップレベル）
-- 画像は `../img/` で始まるパスを使用
+- 画像は `/img/` で始まる絶対パスを使用（例: `/img/screenshots/image.png`）
 - コードブロックには言語指定を推奨
 
 ### Gitの使い方
