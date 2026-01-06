@@ -1,10 +1,9 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getDailyNote, getDailyNotes } from '../../utils/markdown';
-import { renderMarkdown } from '../../utils/markdownRenderer';
+import { getCollection } from 'astro:content';
 
 export async function getStaticPaths() {
-  const notes = await getDailyNotes();
+  const notes = await getCollection('daily');
   return notes.map((note) => ({
     params: { slug: note.slug },
     props: { note },
@@ -12,16 +11,20 @@ export async function getStaticPaths() {
 }
 
 const { note } = Astro.props;
-const htmlContent = renderMarkdown(note.content);
+const { Content } = await note.render();
+const title = note.data.title || note.slug;
+const date = note.data.date || note.slug;
 ---
 
-<BaseLayout title={note.title}>
+<BaseLayout title={title}>
   <article>
     <header class="mb-8">
-      <h1 class="text-4xl font-bold mb-2">{note.title}</h1>
-      <p class="text-gray-600">{note.date}</p>
+      <h1 class="text-4xl font-bold mb-2">{title}</h1>
+      <p class="text-gray-600">{date}</p>
     </header>
-    <div class="markdown-content" set:html={htmlContent} />
+    <div class="markdown-content">
+      <Content />
+    </div>
     <footer class="mt-12 pt-8 border-t border-gray-200">
       <a
         href="/daily"

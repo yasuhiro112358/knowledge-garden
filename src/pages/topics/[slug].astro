@@ -1,10 +1,9 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getTopic, getTopics } from '../../utils/markdown';
-import { renderMarkdown } from '../../utils/markdownRenderer';
+import { getCollection } from 'astro:content';
 
 export async function getStaticPaths() {
-  const topics = await getTopics();
+  const topics = await getCollection('topics');
   return topics.map((topic) => ({
     params: { slug: topic.slug },
     props: { topic },
@@ -12,13 +11,14 @@ export async function getStaticPaths() {
 }
 
 const { topic } = Astro.props;
-const htmlContent = renderMarkdown(topic.content);
+const { Content } = await topic.render();
+const title = topic.data.title || topic.slug;
 ---
 
-<BaseLayout title={topic.title}>
+<BaseLayout title={title}>
   <article>
     <header class="mb-8">
-      <h1 class="text-4xl font-bold mb-4">{topic.title}</h1>
+      <h1 class="text-4xl font-bold mb-4">{title}</h1>
       {topic.data.tags && topic.data.tags.length > 0 && (
         <div class="flex flex-wrap gap-2">
           {topic.data.tags.map((tag) => (
@@ -29,7 +29,9 @@ const htmlContent = renderMarkdown(topic.content);
         </div>
       )}
     </header>
-    <div class="markdown-content" set:html={htmlContent} />
+    <div class="markdown-content">
+      <Content />
+    </div>
     <footer class="mt-12 pt-8 border-t border-gray-200">
       <a
         href="/topics"

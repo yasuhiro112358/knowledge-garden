@@ -1,25 +1,36 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getDailyNotes } from '../../utils/markdown';
+import { getCollection } from 'astro:content';
 
-const notes = await getDailyNotes();
+const allNotes = await getCollection('daily');
+
+// 日付でソート（新しい順）
+const notes = allNotes.sort((a, b) => {
+  const dateA = a.data.date || a.slug;
+  const dateB = b.data.date || b.slug;
+  return dateB.localeCompare(dateA);
+});
 ---
 
 <BaseLayout title="日次ノート一覧">
   <div>
     <h1 class="text-3xl font-bold mb-8">日次ノート一覧</h1>
     <div class="space-y-3">
-      {notes.map((note) => (
-        <a
-          href={`/daily/${note.slug}`}
-          class="block p-5 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all"
-        >
-          <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-lg">{note.title}</h2>
-            <span class="text-sm text-gray-500">{note.date}</span>
-          </div>
-        </a>
-      ))}
+      {notes.map((note) => {
+        const title = note.data.title || note.slug;
+        const date = note.data.date || note.slug;
+        return (
+          <a
+            href={`/daily/${note.slug}`}
+            class="block p-5 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all"
+          >
+            <div class="flex items-center justify-between">
+              <h2 class="font-semibold text-lg">{title}</h2>
+              <span class="text-sm text-gray-500">{date}</span>
+            </div>
+          </a>
+        );
+      })}
     </div>
   </div>
 </BaseLayout>

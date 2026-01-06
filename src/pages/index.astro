@@ -1,9 +1,24 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getTopics, getDailyNotes } from '../utils/markdown';
+import { getCollection } from 'astro:content';
 
-const topics = await getTopics();
-const dailyNotes = await getDailyNotes();
+const allTopics = await getCollection('topics');
+const allDailyNotes = await getCollection('daily');
+
+// タイトルでソート（日本語対応）
+const topics = allTopics.sort((a, b) => {
+  const titleA = a.data.title || a.slug;
+  const titleB = b.data.title || b.slug;
+  return titleA.localeCompare(titleB, 'ja');
+});
+
+// 日付でソート（新しい順）
+const dailyNotes = allDailyNotes.sort((a, b) => {
+  const dateA = a.data.date || a.slug;
+  const dateB = b.data.date || b.slug;
+  return dateB.localeCompare(dateA);
+});
+
 const recentTopics = topics.slice(0, 6);
 const recentNotes = dailyNotes.slice(0, 5);
 ---
@@ -25,17 +40,21 @@ const recentNotes = dailyNotes.slice(0, 5);
         </a>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {recentTopics.map((topic) => (
-          <a
-            href={`/topics/${topic.slug}`}
-            class="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all"
-          >
-            <h3 class="font-semibold text-lg mb-2">{topic.title}</h3>
-            <p class="text-sm text-gray-600 line-clamp-2">
-              {topic.content.substring(0, 100)}...
-            </p>
-          </a>
-        ))}
+        {recentTopics.map((topic) => {
+          const title = topic.data.title || topic.slug;
+          const preview = topic.body.substring(0, 100);
+          return (
+            <a
+              href={`/topics/${topic.slug}`}
+              class="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all"
+            >
+              <h3 class="font-semibold text-lg mb-2">{title}</h3>
+              <p class="text-sm text-gray-600 line-clamp-2">
+                {preview}...
+              </p>
+            </a>
+          );
+        })}
       </div>
     </section>
 
@@ -47,17 +66,21 @@ const recentNotes = dailyNotes.slice(0, 5);
         </a>
       </div>
       <div class="space-y-3">
-        {recentNotes.map((note) => (
-          <a
-            href={`/daily/${note.slug}`}
-            class="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all"
-          >
-            <div class="flex items-center justify-between">
-              <h3 class="font-semibold">{note.title}</h3>
-              <span class="text-sm text-gray-500">{note.date}</span>
-            </div>
-          </a>
-        ))}
+        {recentNotes.map((note) => {
+          const title = note.data.title || note.slug;
+          const date = note.data.date || note.slug;
+          return (
+            <a
+              href={`/daily/${note.slug}`}
+              class="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all"
+            >
+              <div class="flex items-center justify-between">
+                <h3 class="font-semibold">{title}</h3>
+                <span class="text-sm text-gray-500">{date}</span>
+              </div>
+            </a>
+          );
+        })}
       </div>
     </section>
   </div>
