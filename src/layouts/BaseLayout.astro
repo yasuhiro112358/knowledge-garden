@@ -1,0 +1,134 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = '個人的な学習メモとナレッジベース' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title} | Knowledge Garden</title>
+  </head>
+  <body class="bg-gray-50 text-gray-900">
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <nav class="max-w-4xl mx-auto px-4 py-4">
+        <div class="flex items-center justify-between">
+          <a href="/" class="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors">
+            🌱 Knowledge Garden
+          </a>
+          <div class="flex gap-4">
+            <a href="/topics" class="text-gray-700 hover:text-blue-600 transition-colors">
+              トピック
+            </a>
+            <a href="/daily" class="text-gray-700 hover:text-blue-600 transition-colors">
+              日次ノート
+            </a>
+            <a
+              href="https://github.com/yasuhiro112358/knowledge-garden"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-gray-700 hover:text-blue-600 transition-colors"
+            >
+              GitHub
+            </a>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-8">
+      <slot />
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-16">
+      <div class="max-w-4xl mx-auto px-4 py-8 text-center text-gray-600">
+        <p>
+          Built with <a href="https://astro.build" class="text-blue-600 hover:underline">Astro</a> • 
+          <a href="https://github.com/yasuhiro112358/knowledge-garden" class="text-blue-600 hover:underline">View on GitHub</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  html {
+    font-family: system-ui, sans-serif;
+  }
+  
+  /* Markdownコンテンツのスタイル */
+  :global(.markdown-content) {
+    @apply max-w-none;
+  }
+  
+  :global(.markdown-content h1) {
+    @apply text-3xl font-bold mt-8 mb-4 pb-2 border-b border-gray-200;
+  }
+  
+  :global(.markdown-content h2) {
+    @apply text-2xl font-bold mt-6 mb-3;
+  }
+  
+  :global(.markdown-content h3) {
+    @apply text-xl font-semibold mt-4 mb-2;
+  }
+  
+  :global(.markdown-content p) {
+    @apply mb-4 leading-relaxed;
+  }
+  
+  :global(.markdown-content ul),
+  :global(.markdown-content ol) {
+    @apply mb-4 ml-6;
+  }
+  
+  :global(.markdown-content li) {
+    @apply mb-2;
+  }
+  
+  :global(.markdown-content code) {
+    @apply bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono;
+  }
+  
+  :global(.markdown-content pre) {
+    @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4;
+  }
+  
+  :global(.markdown-content pre code) {
+    @apply bg-transparent p-0 text-sm;
+  }
+  
+  :global(.markdown-content blockquote) {
+    @apply border-l-4 border-gray-300 pl-4 italic my-4;
+  }
+  
+  :global(.markdown-content a) {
+    @apply text-blue-600 hover:underline;
+  }
+  
+  :global(.markdown-content img) {
+    @apply max-w-full h-auto rounded-lg my-4;
+  }
+  
+  :global(.markdown-content table) {
+    @apply w-full border-collapse mb-4;
+  }
+  
+  :global(.markdown-content th),
+  :global(.markdown-content td) {
+    @apply border border-gray-300 px-4 py-2;
+  }
+  
+  :global(.markdown-content th) {
+    @apply bg-gray-100 font-semibold;
+  }
+</style>
+
