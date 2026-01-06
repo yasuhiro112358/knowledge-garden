@@ -4,7 +4,7 @@
 
 GitHub Actionsを使用して、Xserver VPSへの自動デプロイを設定します。
 
-**初回セットアップ手順については、[GitHub Actions 自動デプロイ セットアップ手順書](./github-actions-setup-guide.md)を参照してください。**
+**初回セットアップ手順については、[GitHub Actions 自動デプロイ セットアップ手順書](./guides/github-actions-setup-guide.md)を参照してください。**
 
 ## デプロイフロー
 
@@ -40,7 +40,7 @@ GitHub Actionsを使用して、Xserver VPSへの自動デプロイを設定し�
 #### このリポジトリのパス
 - `KNOWLEDGE_GARDEN_PATH`: このリポジトリをクローンしたVPS上のパス（例: `/opt/knowledge-garden`）
 
-**詳細な設定手順については、[GitHub Actions 自動デプロイ セットアップ手順書](./github-actions-setup-guide.md)を参照してください。**
+**詳細な設定手順については、[GitHub Actions 自動デプロイ セットアップ手順書](./guides/github-actions-setup-guide.md)を参照してください。**
 
 ## ワークフローの説明
 
@@ -73,13 +73,13 @@ GitHub Actionsを使用して、Xserver VPSへの自動デプロイを設定し�
 
 ## トラブルシューティング
 
-一般的なエラーと対処方法については、[GitHub Actions 自動デプロイ セットアップ手順書](./github-actions-setup-guide.md#トラブルシューティング)を参照してください。
+一般的なエラーと対処方法については、[GitHub Actions 自動デプロイ セットアップ手順書](./guides/github-actions-setup-guide.md#トラブルシューティング)を参照してください。
 
 ## 参考
 
-- [GitHub Actions 自動デプロイ セットアップ手順書](./github-actions-setup-guide.md) - 初回セットアップ手順
+- [GitHub Actions 自動デプロイ セットアップ手順書](./guides/github-actions-setup-guide.md) - 初回セットアップ手順
 - [GitHub Actions ドキュメント](https://docs.github.com/ja/actions)
 - [appleboy/ssh-action](https://github.com/appleboy/ssh-action)
 - [docker/build-push-action](https://github.com/docker/build-push-action)
-- [Docker + Traefik デプロイメントガイド](./docker-deployment.md)
+- [Docker + Traefik デプロイメントガイド](./guides/docker-deployment.md)
 

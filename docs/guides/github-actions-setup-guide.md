@@ -2,7 +2,7 @@
 
 このドキュメントは、GitHub Actionsを使用した自動デプロイの初回セットアップ手順を説明します。
 
-詳細な仕様や説明については、[GitHub Actions 自動デプロイ設定ガイド](./github-actions-setup.md)を参照してください。
+詳細な仕様や説明については、[GitHub Actions 自動デプロイ設定ガイド](../github-actions-setup.md)を参照してください。
 
 ## 前提条件
 
@@ -272,7 +272,7 @@ git push origin main
 
 ## 参考
 
-- [GitHub Actions 自動デプロイ設定ガイド](./github-actions-setup.md) - 詳細な仕様と説明
+- [GitHub Actions 自動デプロイ設定ガイド](../github-actions-setup.md) - 詳細な仕様と説明
 - [Docker + Traefik デプロイメントガイド](./docker-deployment.md)
 - [GitHub Actions ドキュメント](https://docs.github.com/ja/actions)
 

@@ -121,7 +121,7 @@ Knowledge Garden 公開サイト
 
 ### 5.1 技術スタック
 - **TECH-001**: Astro 4.x を使用する（静的サイトジェネレーター）
-  - 選定理由: 詳細は `docs/technology-selection.md` を参照
+  - 選定理由: 詳細は [ADR 0002: Astroを静的サイトジェネレーターとして採用](./adr/0002-use-astro-as-static-site-generator.md) を参照
   - Markdownのネイティブサポート、TypeScript完全対応、既存構造への適合性が高い
 - **TECH-002**: TypeScript を使用する
 - **TECH-003**: Tailwind CSS を使用する（スタイリング）
@@ -149,7 +149,7 @@ Knowledge Garden 公開サイト
 - **TECH-006**: 個人事業サイト `newtralize.com` のサブドメインで公開する
 - **TECH-007**: サブドメイン方式を採用: `https://knowledge.newtralize.com`
 - **TECH-007-1**: ベースパスは `/`（サブドメインのため）
-- **TECH-007-2**: 詳細は `docs/domain-proposal.md` を参照
+- **TECH-007-2**: 詳細は [ADR 0001: Knowledge Gardenのサブドメイン方式採用](./adr/0001-use-subdomain-for-knowledge-garden.md) を参照
 - **TECH-007-3**: 決定日: 2025年1月
 
 ### 5.3 ビルド環境

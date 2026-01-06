@@ -72,5 +72,5 @@ Knowledge Gardenのコンテンツ形式を決定する必要がある。既存�
 
 ## References
 
-- [技術選定書](../technology-selection.md) - 「8. AI協働の観点」セクション
+- [ADR 0002: Astroを静的サイトジェネレーターとして採用](./0002-use-astro-as-static-site-generator.md) - AI協働の観点についても言及
 

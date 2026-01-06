@@ -29,11 +29,10 @@
 **ドキュメント作成**:
 - 要件定義書（`docs/requirements.md`）
 - 機能仕様書（`docs/functional-spec.md`）
-- 技術選定書（`docs/technology-selection.md`）
-- ドメイン・名前提案書（`docs/domain-proposal.md`）
-- ホスティング方法の比較（`docs/hosting-comparison.md`）
-- サーバー統合方針（`docs/server-consolidation.md`）
-- Docker + Traefik デプロイメントガイド（`docs/docker-deployment.md`）
+- 技術選定（ADR 0002: `docs/adr/0002-use-astro-as-static-site-generator.md`）
+- ドメイン構造（ADR 0001: `docs/adr/0001-use-subdomain-for-knowledge-garden.md`）
+- ホスティング方法（ADR 0003: `docs/adr/0003-use-vps-with-traefik-and-docker.md`）
+- Docker + Traefik デプロイメントガイド（`docs/guides/docker-deployment.md`）
 
 **実装詳細**:
 - 画像パスの自動変換ロジック（`../img/` → `/img/`）

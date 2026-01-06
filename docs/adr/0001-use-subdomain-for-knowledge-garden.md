@@ -73,6 +73,5 @@ Knowledge Gardenを`newtralize.com`の配下で公開する必要がある。将
 
 ## References
 
-- [ドメイン・名前提案書](../domain-proposal.md)
-- [Docker + Traefik デプロイメントガイド](../docker-deployment.md)
+- [Docker + Traefik デプロイメントガイド](../guides/docker-deployment.md)
 

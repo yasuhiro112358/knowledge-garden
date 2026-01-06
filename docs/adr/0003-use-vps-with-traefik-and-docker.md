@@ -74,7 +74,5 @@ Knowledge Gardenのホスティング方法を決定する必要がある。現�
 
 ## References
 
-- [サーバー統合方針](../server-consolidation.md)
-- [Docker + Traefik デプロイメントガイド](../docker-deployment.md)
-- [ホスティング方法の比較](../hosting-comparison.md)
+- [Docker + Traefik デプロイメントガイド](../guides/docker-deployment.md)
 

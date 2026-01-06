@@ -93,6 +93,5 @@ Knowledge Gardenを公開するための静的サイトジェネレーターを�
 
 ## References
 
-- [技術選定書](../technology-selection.md)
 - [Astro公式ドキュメント](https://docs.astro.build/)
 
