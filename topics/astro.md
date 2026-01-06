@@ -39,8 +39,63 @@ project/
     layouts/        # レイアウト
     content/        # Content Collections（任意）
   public/           # 静的アセット（そのまま配信）
-  astro.config.mjs  # 設定
+  astro.config.mjs  # Astro設定
+  tsconfig.json     # TypeScript設定（.tsファイルを使う場合に必要）
 ```
+
+## TypeScript設定（tsconfig.json）
+
+Astroプロジェクトで`.ts`ファイル（TypeScript）を使用する場合、`tsconfig.json`が必要です。
+
+### なぜ必要か
+
+1. **型チェック**: TypeScriptの型エラーを検出
+2. **エディタサポート**: VS CodeやCursorなどのエディタでIntelliSense（オートコンプリート、型情報）が動作
+3. **モジュール解決**: インポートパスの解決方法を指定
+4. **Astro統合**: AstroがVite経由でTypeScriptを処理する際に設定を参照
+
+### 読み込み箇所
+
+`tsconfig.json`は以下のツールが自動的に読み込みます：
+
+- **Astro（Vite経由）**: ビルド時にTypeScriptファイルを処理する際
+- **エディタ**: 型チェックとIntelliSenseのために
+- **TypeScriptコンパイラ（`tsc`）**: 直接実行した場合
+
+### 基本的な設定例
+
+```json
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["astro/client"]
+  }
+}
+```
+
+**各設定の意味**:
+- `extends`: Astroの厳格な型チェック設定を継承
+- `baseUrl`: モジュール解決のベースパス
+- `paths`: パスエイリアス（`@/utils/markdown`で`src/utils/markdown`を参照可能）
+- `esModuleInterop`: CommonJSとES Modulesの相互運用を有効化
+- `module`: ES Modules形式で出力
+- `moduleResolution: "bundler"`: バンドラー（Vite）向けのモジュール解決
+- `types`: Astroの型定義を読み込み
+
+### 確認方法
+
+- **開発サーバー**: `npm run dev`で型エラーがあれば表示される
+- **エディタ**: `.ts`ファイルを開くと型チェックが動作
+- **ビルド**: `npm run build`で型エラーがあればビルドが失敗
+
+**注意**: `.astro`ファイルのみを使用する場合は`tsconfig.json`は必須ではありませんが、`.ts`ファイルを使う場合は必要です。
 
 ## 最初のページ
 - `src/pages/index.astro` を作成すると `/` にマッピングされます。
