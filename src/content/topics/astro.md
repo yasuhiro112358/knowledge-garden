@@ -167,6 +167,21 @@ const blog = defineCollection({
 
 export const collections = { blog };
 ```
+
+**Zodスキーマについて**:
+- AstroのContent Collectionsでは、**Zodスキーマが組み込まれています**（`z`は`astro:content`からインポート）
+- `z.object()`でfrontmatterの型を定義することで、以下のメリットがあります：
+  - **型安全性**: TypeScriptの型チェックが効く
+  - **バリデーション**: ビルド時にfrontmatterの形式を検証
+  - **IntelliSense**: エディタでオートコンプリートが効く
+  - **エラー検出**: スキーマに合わないfrontmatterがあるとビルド時にエラー
+- よく使うZodの型：
+  - `z.string()`: 文字列
+  - `z.number()`: 数値
+  - `z.boolean()`: 真偽値
+  - `z.array(z.string())`: 文字列の配列
+  - `.optional()`: オプショナル（省略可能）
+  - `.default('value')`: デフォルト値
 3) `src/content/blog/hello-world.md` を作成
 ```md
 ---
