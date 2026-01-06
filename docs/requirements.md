@@ -91,6 +91,10 @@ Knowledge Garden 公開サイト
 - **NFR-006**: 既存のMarkdownファイル構造を変更せずに動作する
 - **NFR-007**: 新しいMarkdownファイルを追加するだけで自動的に反映される
 - **NFR-008**: コードはTypeScript/Astroで記述し、型安全性を確保する
+- **NFR-009**: **可能な限り標準構成を優先する**（カスタムコードは最小限に抑える）
+  - Astroの標準機能（Content Collections、組み込みのMarkdownレンダリングなど）を優先的に使用する
+  - カスタム実装が必要な場合は、標準機能で代替できないか検討する
+  - 標準機能を使用することで、保守性・アップグレード性・ドキュメントの充実度が向上する
 
 ### 3.4 セキュリティ要件
 - **NFR-009**: 静的サイトのため、サーバーサイドの脆弱性リスクは低い
@@ -119,31 +123,42 @@ Knowledge Garden 公開サイト
 
 ## 5. 技術要件
 
+### 5.0 設計方針
+
+#### 5.0.1 標準構成の優先
+- **DESIGN-001**: **可能な限り標準構成を優先する方針を採用する**
+  - Astroの標準機能（Content Collections、組み込みのMarkdownレンダリング、型定義の自動生成など）を優先的に使用する
+  - カスタムコード（独自のユーティリティ関数、カスタムレンダラーなど）は最小限に抑える
+  - 標準機能で実現できない場合のみ、カスタム実装を検討する
+
+**理由**:
+- **保守性**: 標準機能はAstroのアップデートに追従しやすく、長期的な保守が容易
+- **ドキュメント**: 標準機能は公式ドキュメントが充実しており、学習コストが低い
+- **コミュニティ**: 標準機能はコミュニティのサポートが受けやすく、問題解決が容易
+- **型安全性**: Content Collectionsを使用することで、TypeScriptの型定義が自動生成され、型安全性が向上
+- **パフォーマンス**: 標準機能は最適化されており、パフォーマンス面でも有利
+
+**実装例**:
+- Content Collectionsを使用することで、`gray-matter`や`markdown-it`などのカスタムライブラリが不要になる
+- Astroの組み込みMarkdownレンダリングを使用することで、カスタムレンダラーが不要になる
+- 型定義は`.astro/content.d.ts`として自動生成されるため、手動での型定義が不要
+
 ### 5.1 技術スタック
-- **TECH-001**: Astro 4.x を使用する（静的サイトジェネレーター）
+- **TECH-001**: Astro 5.x を使用する（静的サイトジェネレーター）
   - 選定理由: 詳細は [ADR 0002: Astroを静的サイトジェネレーターとして採用](./adr/0002-use-astro-as-static-site-generator.md) を参照
   - Markdownのネイティブサポート、TypeScript完全対応、既存構造への適合性が高い
+  - **標準機能の優先**: Content Collectionsを使用することで、カスタムコードを最小限に抑える
 - **TECH-002**: TypeScript を使用する
 - **TECH-003**: Tailwind CSS を使用する（スタイリング）
-- **TECH-004**: Markdown-it を使用する（Markdownレンダリング）
-  - 説明: MarkdownテキストをHTMLに変換するJavaScriptライブラリ
-  - 用途: `topics/`や`daily/`のMarkdownファイルをHTMLに変換して表示
-  - 機能: シンタックスハイライト、リンクの自動変換、見出しへのアンカーリンク生成など
-  - 実装: `src/utils/markdownRenderer.ts`で使用
-- **TECH-005**: gray-matter を使用する（frontmatter解析）
-  - 説明: Markdownファイルのfrontmatter（YAML形式のメタデータ）を解析するライブラリ
-  - 用途: Markdownファイルの先頭にある`---`で囲まれたメタデータ（タイトル、日付、タグなど）を抽出
-  - 例: 
-    ```markdown
-    ---
-    title: "Supabase"
-    date: "2025-01-10"
-    tags: ["database", "backend"]
-    ---
-    # Supabase
-    本文...
-    ```
-  - 実装: `src/utils/markdown.ts`で使用
+- **TECH-004**: **Content Collections**を使用する（標準機能）
+  - 説明: Astroの標準機能で、Markdownファイルを型安全に管理する
+  - 用途: `src/content/topics/`や`src/content/daily/`のMarkdownファイルを自動的に読み込み、型定義を生成
+  - 機能: 
+    - Zodスキーマによるfrontmatterの型定義とバリデーション
+    - TypeScriptの型定義の自動生成（`.astro/content.d.ts`）
+    - 組み込みのMarkdownレンダリング（カスタムレンダラー不要）
+  - 実装: `src/content/config.ts`でコレクションを定義
+  - **標準構成の優先**: `gray-matter`や`markdown-it`などのカスタムライブラリは不要
 
 ### 5.2 ホスティング
 - **TECH-006**: 個人事業サイト `newtralize.com` のサブドメインで公開する
@@ -157,71 +172,59 @@ Knowledge Garden 公開サイト
 - **TECH-009**: npm を使用する（パッケージマネージャー）
 
 ### 5.4 ファイル構造
-- **TECH-010**: 既存のディレクトリ構造（`topics/`、`daily/`、`img/`）を維持する
+- **TECH-010**: Astroの標準構成に従う
+  - コンテンツ（Markdownファイル）は`src/content/`ディレクトリに配置する（Content Collectionsの標準）
+  - 静的アセットは`public/`ディレクトリに配置する（Astroの標準）
 - **TECH-011**: Astroのソースコードは`src/`ディレクトリに配置する
-- **TECH-012**: 静的アセットは`public/`ディレクトリに配置する（ビルド時に`img/`からコピー）
+  - `src/pages/`: ページコンポーネント
+  - `src/layouts/`: レイアウトコンポーネント
+  - `src/content/`: コンテンツ（Markdownファイル）
+- **TECH-012**: 静的アセットは`public/`ディレクトリに配置する（Astroの標準構成）
 
 ### 5.5 ライブラリの詳細説明
 
-#### 5.5.1 Markdown-it（TECH-004）
+#### 5.5.1 Content Collections（TECH-004）
 
-**概要**: MarkdownテキストをHTMLに変換するJavaScriptライブラリ
+**概要**: Astroの標準機能で、Markdownファイルを型安全に管理するシステム
 
 **主な機能**:
-- Markdown記法をHTMLに変換
-- HTMLタグの埋め込み対応
-- リンクの自動変換（`linkify: true`）
-- タイポグラフィの改善（引用符、ダッシュなど）
-- プラグインシステム（`markdown-it-anchor`で見出しにアンカーリンクを追加）
+- Zodスキーマによるfrontmatterの型定義とバリデーション
+- TypeScriptの型定義の自動生成（`.astro/content.d.ts`）
+- 組み込みのMarkdownレンダリング（カスタムレンダラー不要）
+- `getCollection()` APIでコレクションを取得
+- `<Content />`コンポーネントでMarkdownを自動レンダリング
 
 **使用例**:
 ```typescript
-import MarkdownIt from 'markdown-it';
+// src/content/config.ts
+import { defineCollection, z } from 'astro:content';
 
-const md = new MarkdownIt({
-  html: true,        // HTMLタグを許可
-  linkify: true,     // URLを自動的にリンク化
-  typographer: true, // タイポグラフィを改善
+const topics = defineCollection({
+  type: 'content',
+  schema: z.object({
+    title: z.string().optional(),
+    date: z.string().optional(),
+    tags: z.array(z.string()).optional(),
+  }),
 });
 
-const html = md.render('# タイトル\n\nこれは**太字**です。');
-// → <h1>タイトル</h1><p>これは<strong>太字</strong>です。</p>
+export const collections = { topics };
 ```
 
-**実装場所**: `src/utils/markdownRenderer.ts`
-
-#### 5.5.2 gray-matter（TECH-005）
-
-**概要**: Markdownファイルのfrontmatter（YAML形式のメタデータ）を解析するライブラリ
-
-**主な機能**:
-- Markdownファイルの先頭にある`---`で囲まれたYAMLメタデータを抽出
-- メタデータと本文を分離
-- TypeScriptの型定義に対応
-
-**使用例**:
-```typescript
-import matter from 'gray-matter';
-
-const fileContent = `---
-title: "Supabase"
-date: "2025-01-10"
-tags: ["database", "backend"]
+```astro
 ---
-# Supabase
-本文...
-`;
+// src/pages/topics/index.astro
+import { getCollection } from 'astro:content';
 
-const { data, content } = matter(fileContent);
-// data: { title: "Supabase", date: "2025-01-10", tags: [...] }
-// content: "# Supabase\n本文..."
+const topics = await getCollection('topics');
+---
 ```
 
-**実装場所**: `src/utils/markdown.ts`
+**実装場所**: `src/content/config.ts`
 
-**なぜ必要なのか**:
-- AstroはMarkdownファイルを直接読み込む機能があるが、既存の`topics/`や`daily/`ディレクトリ構造を維持するため、ファイルシステムから直接読み込む必要がある
-- gray-matterを使用することで、frontmatterと本文を分離し、メタデータ（タイトル、日付、タグなど）を取得できる
+**標準構成の優先**:
+- 以前は`gray-matter`と`markdown-it`を使用したカスタム実装を使用していたが、Content Collectionsに移行することで、これらのライブラリが不要になった
+- 標準機能を使用することで、保守性・型安全性・ドキュメントの充実度が向上
 
 ## 6. 運用要件
 
