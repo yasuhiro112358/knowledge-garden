@@ -17,24 +17,25 @@
 ## 構造
 
 ```
-/（Vault = GitHubリポジトリのルート）
-├── daily/
-│   └── 2025-08-08.md     ← 日々のメモ（気軽に記録）
-├── topics/
-│   ├── docker.md         ← 技術まとめ（後で成文化）
-│   ├── git.md
-│   └── obsidian.md
+/（GitHubリポジトリのルート）
+├── src/                   ← Astroサイトのソースコード
+│   ├── content/          ← コンテンツ（Markdownファイル）
+│   │   ├── topics/        ← 技術まとめ（後で成文化）
+│   │   │   ├── docker.md
+│   │   │   ├── git.md
+│   │   │   └── obsidian.md
+│   │   └── daily/        ← 日々のメモ（気軽に記録）
+│   │       └── 2025-08-08.md
+│   ├── pages/            ← ページコンポーネント
+│   ├── layouts/          ← レイアウトコンポーネント
+│   └── utils/            ← ユーティリティ関数
+├── public/               ← 静的アセット（そのまま配信される）
+│   └── img/              ← 画像ファイル
+│       └── screenshots/
 ├── snippets/
 │   └── useful-commands.md  ← 使い回しコードやコマンド
 ├── templates/
 │   └── daily-note.md
-├── img/
-│   └── screenshots/
-├── src/                   ← Astroサイトのソースコード
-│   ├── pages/            ← ページコンポーネント
-│   ├── layouts/          ← レイアウトコンポーネント
-│   └── utils/            ← ユーティリティ関数
-├── public/               ← 静的アセット（ビルド時にimg/がコピーされる）
 ├── README.md
 └── package.json
 ```
@@ -42,15 +43,17 @@
 ## 使い方
 
 ### Daily Notes
-- `daily/` フォルダに日付ベースのメモを作成
+- `src/content/daily/` フォルダに日付ベースのメモを作成
 - テンプレートは `templates/daily-note.md` を使用
 - 気軽に思いついたことを記録
+- 画像は `/img/` から始まる絶対パスで指定（例: `/img/screenshots/image.png`）
 - **自動的に公開サイトに反映されます**
 
 ### Topics
-- `topics/` フォルダに技術的なまとめを作成
+- `src/content/topics/` フォルダに技術的なまとめを作成
 - 体系的に整理された知識を蓄積
 - 後から検索しやすいように構造化
+- 画像は `/img/` から始まる絶対パスで指定（例: `/img/screenshots/image.png`）
 - **自動的に公開サイトに反映されます**
 
 ### Snippets
