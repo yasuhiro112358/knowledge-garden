@@ -169,6 +169,86 @@ docker volume prune                   # 未使用ボリューム削除
 
 ## Dockerfile
 
+### マルチステージビルド
+
+#### マルチステージビルドとは
+1つのDockerfile内で複数のビルドステージを定義し、最終的なイメージを軽量化する手法。
+
+#### 典型的な構成（静的サイトジェネレーターの場合）
+
+```dockerfile
+# ステージ1: ビルドステージ（Node.jsが必要）
+FROM node:24-alpine AS builder
+
+WORKDIR /app
+
+# 依存関係のインストール
+COPY package*.json ./
+RUN npm ci
+
+# ソースコードのコピー
+COPY . .
+
+# ビルド（静的ファイルを生成）
+RUN npm run build
+
+# ステージ2: 実行ステージ（Node.jsは不要）
+FROM nginx:alpine
+
+# ビルド済みの静的ファイルをコピー
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Nginx設定
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+#### なぜ2番目のステージでNode.jsが不要なのか
+
+**重要なポイント：**
+
+1. **ビルドは完了している**
+   - 1番目のステージ（`builder`）で`npm run build`を実行し、静的ファイル（HTML、CSS、JS）を`dist/`ディレクトリに生成済み
+   - 2番目のステージでは、このビルド済みファイルをコピーするだけ
+
+2. **静的ファイルのみを配信**
+   - Astroなどの静的サイトジェネレーターは、ビルド時にすべてのページをHTMLに変換
+   - 実行時にはサーバーサイド処理が不要（Node.jsランタイム不要）
+   - Nginxは静的ファイルを配信するだけのWebサーバー
+
+3. **イメージサイズの最適化**
+   - Node.jsを含めないことで、最終イメージが大幅に軽量化される
+   - `node:24-alpine`は約200MB、`nginx:alpine`は約40MB
+   - 約160MBの削減効果
+
+4. **セキュリティ面のメリット**
+   - Node.jsを含めないことで、攻撃面が減る
+   - 必要最小限のコンポーネントのみを含める
+
+#### マルチステージビルドの利点まとめ
+
+- **軽量化**: 最終イメージにビルドツールを含めない
+- **セキュリティ**: 不要なコンポーネントを除外
+- **パフォーマンス**: 軽量なイメージで起動が速い
+- **明確な分離**: ビルド環境と実行環境を分離
+
+#### 実際の使用例
+
+```bash
+# ビルド（マルチステージビルド）
+docker build -t myapp:latest .
+
+# 実行（Nginxのみで動作）
+docker run -p 8080:80 myapp:latest
+
+# イメージサイズの確認
+docker images myapp:latest
+# → Node.jsを含まない軽量なイメージ
+```
+
 ## Docker Compose
 
 ### マルチサービス構成の基本
@@ -598,7 +678,7 @@ docker-compose ps
 **実際の運用例：**
 ```bash
 # 本番環境での起動
-docker-compose -f docker-compose.prod.yml up -d
+docker compose -f compose.yaml -f compose.production.yaml up -d
 
 # サービス状態確認
 docker-compose ps
@@ -639,7 +719,7 @@ docker-compose down --remove-orphans
 docker-compose kill
 
 # プロダクションファイル指定での停止
-docker-compose -f docker-compose.prod.yml down
+docker compose -f compose.yaml -f compose.production.yaml down
 ```
 
 **stopとdownの違い：**

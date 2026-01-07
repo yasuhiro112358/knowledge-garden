@@ -1,0 +1,37 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const all = await getCollection('standards');
+// タイトル昇順
+const standards = all.sort((a, b) =>
+  (a.data.title || a.slug).localeCompare(b.data.title || b.slug, 'ja')
+);
+---
+
+<BaseLayout title="Standards">
+  <div>
+    <h1 class="text-3xl font-bold mb-8">Standards（運用規格）</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {standards.map((s) => {
+        const title = s.data.title || s.slug;
+        const version = s.data.version;
+        const status = s.data.status;
+        return (
+          <a
+            href={`/standards/${s.slug}`}
+            class="block p-5 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all"
+          >
+            <h2 class="font-semibold text-lg mb-1">{title}</h2>
+            <p class="text-sm text-gray-600">
+              {status && <span class="mr-2">Status: {status}</span>}
+              {version && <span>Version: {version}</span>}
+            </p>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</BaseLayout>
+
+

@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const items = await getCollection('standards');
+  return items.map((item) => ({
+    params: { slug: item.slug },
+    props: { item },
+  }));
+}
+
+const { item } = Astro.props;
+const { Content } = await item.render();
+const title = item.data.title || item.slug;
+const meta = {
+  status: item.data.status,
+  version: item.data.version,
+  updated: item.data.updated,
+};
+---
+
+<BaseLayout title={title}>
+  <article>
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold mb-2">{title}</h1>
+      {(meta.status || meta.version || meta.updated) && (
+        <p class="text-sm text-gray-600">
+          {meta.status && <span class="mr-3">Status: {meta.status}</span>}
+          {meta.version && <span class="mr-3">Version: {meta.version}</span>}
+          {meta.updated && <span>Updated: {meta.updated}</span>}
+        </p>
+      )}
+    </header>
+    <div class="markdown-content">
+      <Content />
+    </div>
+    <footer class="mt-12 pt-8 border-t border-gray-200">
+      <a href="/standards" class="text-blue-600 hover:underline">← Standards一覧に戻る</a>
+    </footer>
+  </article>
+</BaseLayout>
+
+

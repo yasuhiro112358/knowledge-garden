@@ -1,0 +1,25 @@
+services:
+  knowledge-garden:
+    image: ghcr.io/yasuhiro112358/knowledge-garden:latest
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.knowledge-garden.rule=Host(`knowledge.newtralize.com`)
+      - traefik.http.routers.knowledge-garden.entrypoints=websecure
+      - traefik.http.routers.knowledge-garden.tls=true
+      - traefik.http.routers.knowledge-garden.tls.certresolver=le
+      - traefik.http.services.knowledge-garden.loadbalancer.server.port=80
+      - traefik.http.routers.knowledge-garden.middlewares=knowledge-garden-compress,knowledge-garden-sec-headers
+      - traefik.http.middlewares.knowledge-garden-compress.compress=true
+      - traefik.http.middlewares.knowledge-garden-sec-headers.headers.stsSeconds=31536000
+      - traefik.http.middlewares.knowledge-garden-sec-headers.headers.stsIncludeSubdomains=true
+      - traefik.http.middlewares.knowledge-garden-sec-headers.headers.forceSTSHeader=true
+      - traefik.http.middlewares.knowledge-garden-sec-headers.headers.frameDeny=true
+
+networks:
+  traefik:
+    external: true
+
+

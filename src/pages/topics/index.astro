@@ -1,0 +1,37 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const allTopics = await getCollection('topics');
+
+// タイトルでソート（日本語対応）
+const topics = allTopics.sort((a, b) => {
+  const titleA = a.data.title || a.slug;
+  const titleB = b.data.title || b.slug;
+  return titleA.localeCompare(titleB, 'ja');
+});
+---
+
+<BaseLayout title="トピック一覧">
+  <div>
+    <h1 class="text-3xl font-bold mb-8">トピック一覧</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {topics.map((topic) => {
+        const title = topic.data.title || topic.slug;
+        const preview = topic.body.substring(0, 150);
+        return (
+          <a
+            href={`/topics/${topic.slug}`}
+            class="block p-5 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all"
+          >
+            <h2 class="font-semibold text-lg mb-2">{title}</h2>
+            <p class="text-sm text-gray-600 line-clamp-3">
+              {preview}...
+            </p>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</BaseLayout>
+

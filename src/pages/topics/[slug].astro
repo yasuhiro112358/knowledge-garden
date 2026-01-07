@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const topics = await getCollection('topics');
+  return topics.map((topic) => ({
+    params: { slug: topic.slug },
+    props: { topic },
+  }));
+}
+
+const { topic } = Astro.props;
+const { Content } = await topic.render();
+const title = topic.data.title || topic.slug;
+---
+
+<BaseLayout title={title}>
+  <article>
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold mb-4">{title}</h1>
+      {topic.data.tags && topic.data.tags.length > 0 && (
+        <div class="flex flex-wrap gap-2">
+          {topic.data.tags.map((tag) => (
+            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+    </header>
+    <div class="markdown-content">
+      <Content />
+    </div>
+    <footer class="mt-12 pt-8 border-t border-gray-200">
+      <a
+        href="/topics"
+        class="text-blue-600 hover:underline"
+      >
+        ← トピック一覧に戻る
+      </a>
+    </footer>
+  </article>
+</BaseLayout>
+
