@@ -98,30 +98,33 @@ docker rm knowledge-garden
 
 ## デプロイ方法
 
-### 方法1: GitHub Actionsで自動ビルド・デプロイ
+### 方法1: GitHub Actionsで自動ビルド・デプロイ（推奨）
 
-1. Docker Hubの認証情報をGitHub Secretsに設定
-   - `DOCKER_USERNAME`: Docker Hubのユーザー名
-   - `DOCKER_PASSWORD`: Docker Hubのパスワード
-
-2. VPSの認証情報をGitHub Secretsに設定（自動デプロイする場合）
+1. VPSの認証情報をGitHub Secretsに設定
    - `VPS_HOST`: VPSのIPアドレスまたはホスト名
    - `VPS_USER`: SSHユーザー名
    - `VPS_SSH_KEY`: SSH秘密鍵
    - `KNOWLEDGE_GARDEN_PATH`: このリポジトリをクローンしたVPS上のパス（例: `/srv/knowledge-garden`）
+   - **注意**: コンテナレジストリ（GHCR）への push は `GITHUB_TOKEN` を使用するため、追加の Secrets は不要
 
-3. VPSにこのリポジトリをクローン（初回のみ手動で実行）
+2. VPSにこのリポジトリをクローン（初回のみ手動で実行）
    ```bash
    ssh user@vps
    cd /srv
-   git clone https://github.com/your-username/knowledge-garden.git
+   git clone https://github.com/yasuhiro112358/knowledge-garden.git
    cd knowledge-garden
+   ```
+
+3. VPSで GHCR にログイン（Private イメージを pull するため）
+   ```bash
+   # GitHub Personal Access Token (PAT) を作成（read:packages 権限）
+   echo YOUR_GITHUB_PAT | docker login ghcr.io -u yasuhiro112358 --password-stdin
    ```
 
 4. `main`ブランチにプッシュすると自動的に：
    - Dockerイメージがビルドされる
-   - Docker Hubにプッシュされる
-   - VPSで自動デプロイされる（設定した場合）
+   - GHCR（GitHub Container Registry）にプッシュされる
+   - VPSで自動デプロイされる
 
 詳細なセットアップ手順については、[GitHub Actions自動デプロイセットアップ](./github-actions-setup-guide.md)を参照してください。
 
@@ -129,17 +132,20 @@ docker rm knowledge-garden
 
 ```bash
 # 1. ローカルでビルド
-docker build -t your-dockerhub-username/knowledge-garden:latest .
+docker build -t ghcr.io/yasuhiro112358/knowledge-garden:latest .
 
-# 2. Docker Hubにプッシュ
-docker push your-dockerhub-username/knowledge-garden:latest
+# 2. GHCR にログイン
+echo YOUR_GITHUB_PAT | docker login ghcr.io -u yasuhiro112358 --password-stdin
 
-# 3. VPSで更新
+# 3. GHCR にプッシュ
+docker push ghcr.io/yasuhiro112358/knowledge-garden:latest
+
+# 4. VPSで更新
 ssh user@vps
 cd /srv/knowledge-garden  # このリポジトリをクローンしたパス
 git pull origin main
-DOCKER_USERNAME=your-dockerhub-username docker compose -f compose.yaml -f compose.production.yaml pull
-DOCKER_USERNAME=your-dockerhub-username docker compose -f compose.yaml -f compose.production.yaml up -d
+docker compose -f compose.yaml -f compose.production.yaml pull
+docker compose -f compose.yaml -f compose.production.yaml up -d
 ```
 
 ## このリポジトリだけで完結するデプロイ
@@ -148,10 +154,11 @@ DOCKER_USERNAME=your-dockerhub-username docker compose -f compose.yaml -f compos
 
 ### compose.yaml の構成
 
-- **本番環境用** (`compose.yaml` + `compose.production.yaml`): Docker Hubからイメージをpullして使用
+- **本番環境用** (`compose.yaml` + `compose.production.yaml`): GHCR からイメージをpullして使用
+  - イメージ: `ghcr.io/yasuhiro112358/knowledge-garden:latest`
   - 使用例: VPSでの本番環境、GitHub Actionsからの自動デプロイ
 - **開発環境用** (`compose.override.yaml`): ローカルでビルドして使用
-  - 使用例: ローカルでの動作確認（`localhost` にポート公開して確認）
+  - 使用例: ローカルでの動作確認（`localhost:8085` にポート公開して確認）
 
 ### 初回セットアップ
 
@@ -161,13 +168,14 @@ ssh user@vps
 
 # リポジトリをクローン
 cd /srv
-git clone https://github.com/your-username/knowledge-garden.git
+git clone https://github.com/yasuhiro112358/knowledge-garden.git
 cd knowledge-garden
 
-# 環境変数を設定（.envファイルを作成）
-echo "DOCKER_USERNAME=your-dockerhub-username" > .env
+# GHCR にログイン（Private イメージを pull するため）
+echo YOUR_GITHUB_PAT | docker login ghcr.io -u yasuhiro112358 --password-stdin
 
 # コンテナを起動（本番は明示マージ）
+docker compose -f compose.yaml -f compose.production.yaml pull
 docker compose -f compose.yaml -f compose.production.yaml up -d
 ```
 
@@ -184,7 +192,7 @@ services:
 # compose.production.yaml（本番用の上書き）
 services:
   knowledge-garden:
-    image: ${DOCKER_USERNAME}/knowledge-garden:latest
+    image: ghcr.io/yasuhiro112358/knowledge-garden:latest
     restart: unless-stopped
     networks:
       - traefik

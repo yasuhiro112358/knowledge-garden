@@ -1,28 +1,21 @@
 # GitHub Actions 自動デプロイ セットアップ手順書
 
-このドキュメントは、GitHub Actionsを使用した自動デプロイの初回セットアップ手順を説明します。
+このドキュメントは、GitHub Container Registry (GHCR) と GitHub Actions を使用した自動デプロイの初回セットアップ手順を説明します。
 
 詳細な仕様や説明については、[GitHub Actions 自動デプロイ設定ガイド](../github-actions-setup.md)を参照してください。
 
 ## 前提条件
 
-- Docker Hubアカウントを持っている
+- GitHubアカウントを持っている
 - VPSにSSH接続できる
 - VPSにDockerとDocker Composeがインストールされている
 - Traefikが既に動作している
 
 ## セットアップ手順
 
-### ステップ1: Docker Hubアカウントの準備
+### ステップ1: SSH鍵の生成と設定
 
-1. [Docker Hub](https://hub.docker.com/)でアカウントを作成（まだ持っていない場合）
-2. ログイン後、**Settings** → **Security** → **New Access Token** でアクセストークンを生成
-3. トークン名を入力（例: `github-actions`）
-4. 生成されたトークンをコピー（後で使用します）
-
-### ステップ2: SSH鍵の生成と設定
-
-#### 2.1 ローカルでSSH鍵を生成
+#### 1.1 ローカルでSSH鍵を生成
 
 ```bash
 # SSH鍵を生成（まだ持っていない場合）
@@ -32,7 +25,7 @@ ssh-keygen -t ed25519 -C "github-actions" -f ~/.ssh/github_actions
 # Enter passphrase (empty for no passphrase): [パスフレーズを入力]
 ```
 
-#### 2.2 公開鍵をVPSにコピー
+#### 1.2 公開鍵をVPSにコピー
 
 ```bash
 # 公開鍵をVPSにコピー
@@ -42,7 +35,7 @@ ssh-copy-id -i ~/.ssh/github_actions.pub user@vps-host
 cat ~/.ssh/github_actions.pub | ssh user@vps-host "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
 ```
 
-#### 2.3 SSH接続のテスト
+#### 1.3 SSH接続のテスト
 
 ```bash
 # ローカルからVPSに接続できるか確認
@@ -51,33 +44,9 @@ ssh -i ~/.ssh/github_actions user@vps-host
 # 接続できれば成功
 ```
 
-#### 2.4 GitHub Secretsに秘密鍵を設定
-
-```bash
-# 秘密鍵の内容をコピー
-cat ~/.ssh/github_actions
-```
-
-1. GitHubリポジトリの **Settings** → **Secrets and variables** → **Actions** を開く
-2. **New repository secret** をクリック
-3. Name: `VPS_SSH_KEY`
-4. Secret: 上記でコピーした秘密鍵の内容を貼り付け（改行を含めてそのまま）
-5. **Add secret** をクリック
-
-**重要**: 
-- 秘密鍵は絶対に公開しない
-- GitHub Secretsに設定する際は、改行を含めてそのまま貼り付ける
-
-### ステップ3: GitHub Secretsの設定
+### ステップ2: GitHub Secretsの設定
 
 リポジトリの **Settings** → **Secrets and variables** → **Actions** で以下を設定：
-
-#### Docker Hub認証情報
-
-1. **New repository secret** をクリック
-2. Name: `DOCKER_USERNAME`、Secret: Docker Hubのユーザー名 → **Add secret**
-3. **New repository secret** をクリック
-4. Name: `DOCKER_PASSWORD`、Secret: ステップ1で生成したアクセストークン → **Add secret**
 
 #### VPS接続情報
 
@@ -85,12 +54,33 @@ cat ~/.ssh/github_actions
 2. Name: `VPS_HOST`、Secret: VPSのIPアドレスまたはホスト名（例: `vps.example.com` または `123.45.67.89`） → **Add secret**
 3. **New repository secret** をクリック
 4. Name: `VPS_USER`、Secret: SSHユーザー名（例: `ubuntu`、`root`） → **Add secret**
-5. `VPS_SSH_KEY`はステップ2.4で既に設定済み
+5. **New repository secret** をクリック
+6. Name: `VPS_SSH_KEY`、Secret: 下記の秘密鍵の内容 → **Add secret**
+
+```bash
+# 秘密鍵の内容をコピー
+cat ~/.ssh/github_actions
+```
+
+**重要**: 
+- 秘密鍵は絶対に公開しない
+- GitHub Secretsに設定する際は、改行を含めてそのまま貼り付ける
 
 #### このリポジトリのパス
 
 1. **New repository secret** をクリック
 2. Name: `KNOWLEDGE_GARDEN_PATH`、Secret: このリポジトリをクローンする予定のVPS上のパス（例: `/srv/knowledge-garden`） → **Add secret**
+
+### ステップ3: GitHub Personal Access Token (PAT) の作成（VPS用）
+
+VPS側で Private イメージを pull するために必要です。
+
+1. GitHub → **Settings** (個人アカウント設定) → **Developer settings** → **Personal access tokens** → **Tokens (classic)** → **Generate new token (classic)**
+2. Note: `vps-ghcr-pull` (任意の名前)
+3. Expiration: `No expiration` または適切な期間
+4. 権限: **`read:packages`** にチェック
+5. **Generate token** をクリック
+6. 生成されたトークンをコピー（**この画面を閉じると二度と表示されません**）
 
 ### ステップ4: VPS側の初回セットアップ
 
@@ -100,7 +90,21 @@ cat ~/.ssh/github_actions
 ssh user@vps-host
 ```
 
-#### 4.2 リポジトリをクローン
+#### 4.2 GHCR にログイン（Private イメージを pull するため）
+
+```bash
+# ステップ3で作成したPATを使用
+echo YOUR_GITHUB_PAT | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+
+# 成功すると以下のように表示される
+# Login Succeeded
+```
+
+**重要**: 
+- `YOUR_GITHUB_PAT`: ステップ3で生成したトークン
+- `YOUR_GITHUB_USERNAME`: あなたのGitHubユーザー名（例: `yasuhiro112358`）
+
+#### 4.3 リポジトリをクローン
 
 ```bash
 # リポジトリをクローン（例: /srv/knowledge-garden）
@@ -109,170 +113,156 @@ git clone https://github.com/your-username/knowledge-garden.git
 cd knowledge-garden
 ```
 
-#### 4.3 環境変数を設定
+**注意**: `your-username` は実際のGitHubユーザー名に置き換えてください。
+
+#### 4.4 Traefik ネットワークの確認
 
 ```bash
-# .envファイルを作成
-echo "DOCKER_USERNAME=your-dockerhub-username" > .env
+# Traefikネットワークが存在することを確認
+docker network ls | grep traefik
 
-# 確認
-cat .env
+# 存在しない場合は作成
+docker network create traefik
 ```
 
-**注意**: `your-dockerhub-username`は実際のDocker Hubのユーザー名に置き換えてください。
-
-#### 4.4 パスの確認
+### ステップ5: 初回デプロイ（手動）
 
 ```bash
-# 現在のパスを確認
-pwd
+# VPS上で実行
+cd /srv/knowledge-garden
 
-# このパスが GitHub Secrets の KNOWLEDGE_GARDEN_PATH と一致しているか確認
+# イメージをpull（初回は存在しないのでビルドが必要）
+# まずはローカルでビルド→pushするか、GitHub Actionsを実行してください
+
+# GitHub Actionsで自動ビルドされた後:
+docker compose -f compose.yaml -f compose.production.yaml pull
+docker compose -f compose.yaml -f compose.production.yaml up -d
+
+# ログを確認
+docker compose -f compose.yaml -f compose.production.yaml logs -f
 ```
 
-### ステップ5: 初回テスト
+## 動作確認
 
-#### 5.1 手動でワークフローを実行
+### 1. GitHub Actions の実行
 
-1. GitHubリポジトリの **Actions** タブを開く
-2. 左側のメニューから **Build and Deploy to VPS** を選択
-3. **Run workflow** をクリック
-4. ブランチを選択（`main`）→ **Run workflow** をクリック
+1. `main` ブランチに変更をプッシュ
+   ```bash
+   git add .
+   git commit -m "feat: GHCR運用に移行"
+   git push origin main
+   ```
 
-#### 5.2 ログを確認
+2. GitHubリポジトリの **Actions** タブを開く
+3. **Build and Deploy to VPS** ワークフローが実行されることを確認
+4. ジョブが成功（緑のチェックマーク）することを確認
 
-1. 実行中のワークフローをクリック
-2. 各ステップのログを確認
-3. エラーがないか確認
+### 2. GHCR にイメージがプッシュされたか確認
 
-**成功の確認**:
-- ビルドジョブが成功している
-- デプロイジョブが成功している
-- エラーが表示されていない
+1. GitHubリポジトリの **Packages** セクションを確認
+2. `knowledge-garden` パッケージが作成されている
+3. イメージタグ（`latest`, `main`, `main-xxx` など）が表示されている
 
-### ステップ6: 自動デプロイの確認
-
-#### 6.1 テスト用の変更をプッシュ
+### 3. VPS でコンテナが起動しているか確認
 
 ```bash
-# ローカルで小さな変更を加える（例: README.mdにコメントを追加）
-git add .
-git commit -m "test: GitHub Actions自動デプロイのテスト"
-git push origin main
+# VPS上で実行
+docker ps | grep knowledge-garden
+
+# ログを確認
+docker logs knowledge-garden
+
+# Traefikのルーティングを確認
+docker network inspect traefik | grep knowledge-garden
 ```
 
-#### 6.2 自動デプロイの確認
+### 4. サイトにアクセス
 
-1. GitHubリポジトリの **Actions** タブを開く
-2. 新しいワークフローが自動的に実行されていることを確認
-3. ワークフローが成功することを確認
-4. サイトが更新されていることを確認（`https://knowledge.newtralize.com`）
+ブラウザで `https://knowledge.newtralize.com` にアクセスして、サイトが表示されることを確認
 
 ## トラブルシューティング
 
-### SSH接続エラー
+### イメージのpullに失敗する
 
-**エラー**: `Permission denied (publickey)`
+**エラー**: `Error response from daemon: pull access denied for ghcr.io/yasuhiro112358/knowledge-garden`
 
-**対処手順**:
-1. SSH鍵が正しく設定されているか確認
+**原因**: VPS側でGHCRへのログインができていない（Private イメージのため）
+
+**解決方法**:
+
+1. ステップ4.2を実行して、VPSでGHCRにログインする
+2. 認証情報が正しいか確認:
    ```bash
-   # ローカルで確認
-   ls -la ~/.ssh/github_actions*
+   cat ~/.docker/config.json
+   # ghcr.io のエントリが存在することを確認
    ```
-2. VPS側で公開鍵が`~/.ssh/authorized_keys`に追加されているか確認
+
+### GitHub Actions のビルドに失敗する
+
+**エラー**: `Error: buildx failed with: ERROR: failed to solve: ...`
+
+**原因**: Dockerfileのビルドエラー
+
+**解決方法**:
+
+1. ローカルでビルドして確認:
    ```bash
-   # VPSにSSH接続して確認
-   ssh user@vps-host
-   cat ~/.ssh/authorized_keys | grep github-actions
+   docker build -t knowledge-garden:test .
    ```
-3. SSH鍵の権限を確認
+2. エラー内容を確認して修正
+
+### VPS へのSSH接続に失敗する
+
+**エラー**: `Host key verification failed` または `Permission denied`
+
+**原因**: SSH鍵の設定が正しくない
+
+**解決方法**:
+
+1. `VPS_SSH_KEY` が正しく設定されているか確認
+2. VPSの `~/.ssh/authorized_keys` に公開鍵が登録されているか確認:
    ```bash
-   # ローカルで実行
-   chmod 600 ~/.ssh/github_actions
-   chmod 644 ~/.ssh/github_actions.pub
+   ssh user@vps-host "cat ~/.ssh/authorized_keys"
    ```
-4. GitHub Secretsの`VPS_SSH_KEY`が正しく設定されているか確認
 
-### Dockerイメージが見つからない
+### docker compose: command not found
 
-**エラー**: `Error: image not found`
+**エラー**: `docker compose: command not found`
 
-**対処手順**:
-1. Docker Hubにイメージがプッシュされているか確認
-   - [Docker Hub](https://hub.docker.com/)にログイン
-   - リポジトリ一覧で`knowledge-garden`を確認
-2. `DOCKER_USERNAME`が正しく設定されているか確認
-   - GitHub Secretsで確認
-3. イメージ名が正しいか確認
-   - イメージ名は`your-username/knowledge-garden:latest`の形式
+**原因**: Docker Compose V2（`docker compose`）が使えない環境
 
-### このリポジトリが見つからない
+**解決方法**:
 
-**エラー**: `No such file or directory`
-
-**対処手順**:
-1. `KNOWLEDGE_GARDEN_PATH`が正しく設定されているか確認
-   - GitHub Secretsで確認
-2. VPS側でパスを確認
+1. Docker Compose V2をインストール（Docker Engine/CLI更新）
    ```bash
-   # VPSにSSH接続して確認
-   ssh user@vps-host
-   ls -la /srv/knowledge-garden
-   ```
-3. このリポジトリが正しい場所にクローンされているか確認
-   - ステップ4を再実行
-4. パスが一致しているか確認
-   - VPS側の実際のパスとGitHub Secretsの`KNOWLEDGE_GARDEN_PATH`が一致しているか
-
-### docker-composeコマンドが見つからない
-
-**エラー**: `docker-compose: command not found`
-
-**対処手順**:
-1. VPSにDocker Composeがインストールされているか確認
-   ```bash
-   # VPSにSSH接続して確認
-   ssh user@vps-host
    docker compose version
-   # または
-   docker-compose version
    ```
-2. Docker Compose V2を使用している場合、ワークフローのスクリプトを確認
-   - `.github/workflows/docker-build.yml`で`docker compose`（ハイフンなし）を使用しているか確認
+2. VPSのDockerを最新版に更新
 
-### ワークフローが実行されない
+### Traefikでルーティングされない
 
-**対処手順**:
-1. ブランチが`main`であることを確認
-2. ワークフローファイルが正しい場所にあることを確認
-   - `.github/workflows/docker-build.yml`
-3. ワークフローの構文エラーがないか確認
-   - GitHub Actionsのログで確認
+**原因**: ラベルの設定ミスまたはTraefikネットワークの接続ミス
 
-### デプロイは成功するがサイトにアクセスできない
+**解決方法**:
 
-**対処手順**:
-1. Traefikが動作しているか確認
+1. コンテナのラベルを確認:
    ```bash
-   # VPSにSSH接続して確認
-   ssh user@vps-host
-   docker ps | grep traefik
+   docker inspect knowledge-garden | grep -A 20 Labels
    ```
-2. コンテナが起動しているか確認
-   ```bash
-   docker ps | grep knowledge-garden
-   ```
-3. Traefikのネットワーク（`traefik`）に接続されているか確認
+2. Traefikネットワークへの接続を確認:
    ```bash
    docker network inspect traefik | grep knowledge-garden
    ```
-4. DNS設定を確認
-   - `knowledge.newtralize.com`がVPSのIPアドレスを指しているか確認
+3. Traefikのログを確認:
+   ```bash
+   docker logs traefik
+   ```
 
 ## 参考
 
-- [GitHub Actions 自動デプロイ設定ガイド](../github-actions-setup.md) - 詳細な仕様と説明
-- [Docker + Traefik デプロイメントガイド](./docker-deployment.md)
+- [GitHub Container Registry (GHCR) - docs](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
 - [GitHub Actions ドキュメント](https://docs.github.com/ja/actions)
-
+- [appleboy/ssh-action](https://github.com/appleboy/ssh-action)
+- [docker/build-push-action](https://github.com/docker/build-push-action)
+- [Docker + Traefik デプロイメントガイド](./docker-deployment.md)
+- [ADR-0006: コンテナレジストリの選定（GHCR/Private）](../adr/0006-select-container-registry.md)
