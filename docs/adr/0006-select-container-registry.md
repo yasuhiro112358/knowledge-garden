@@ -2,7 +2,7 @@
 
 ## Status
 
-**Proposed** (2026-01)
+**Accepted** (2026-01)
 
 ## Context
 
@@ -19,8 +19,10 @@ Knowledge Garden は Docker イメージとしてビルドし、VPS（Traefik + 
 
 ## Decision
 
-1. 本プロジェクトのコンテナレジストリとして **GitHub Container Registry（GHCR, `ghcr.io`）を第一候補**とする。
-2. 本ADRのStatusは **Proposed** とし、運用・権限・公開ポリシー（public/private）を確定後に **Accepted** へ更新する。
+1. 本プロジェクトのコンテナレジストリとして **GitHub Container Registry（GHCR, `ghcr.io`）** を採用する。
+2. イメージの公開設定は **Private**（非公開）とする。
+   - 理由: 不要なセキュリティリスクを避ける。イメージの内部構造（Nginx設定、ディレクトリ構造など）を非公開にすることで、攻撃対象を減らす。
+   - サイトのコンテンツは公開されているが、ビルド成果物の配布形態は別問題として管理する。
 
 ## Rationale
 
@@ -76,15 +78,29 @@ Knowledge Garden は Docker イメージとしてビルドし、VPS（Traefik + 
 
 ### ネガティブ
 
-- ⚠️ イメージの公開/非公開ポリシーにより、VPS側の認証設計が変わる
+- ⚠️ **Private 運用**: VPS側で `docker login ghcr.io` が必要（初回のみ、GitHub PAT必要）
 - ⚠️ 既存の Docker Hub 前提（ワークフロー/compose）の置換が必要になる
 
-## 実施内容（予定）
+## 実施内容
 
-- GitHub Actions: push先を `ghcr.io/<owner>/knowledge-garden` に変更
-- `compose.production.yaml`: `image:` を `ghcr.io/...` に変更
-- private運用の場合:
-  - VPS側で `docker login ghcr.io` を行う（PAT等を用意）
+### 1. GitHub Actions ワークフローの変更
+- `.github/workflows/docker-build.yml` を修正:
+  - push先を `ghcr.io/yasuhiro112358/knowledge-garden` に変更
+  - 認証を `docker/login-action` (ghcr.io) に変更
+  - `GITHUB_TOKEN` を使用（追加のSecrets不要）
+
+### 2. Compose設定の変更
+- `compose.production.yaml` の `image:` を `ghcr.io/yasuhiro112358/knowledge-garden:latest` に変更
+
+### 3. VPS側の初期設定（Private運用のため必須）
+- GitHub Personal Access Token (PAT) を作成:
+  - 権限: `read:packages`
+  - Settings → Developer settings → Personal access tokens → Generate new token
+- VPSで認証:
+  ```bash
+  echo $GITHUB_TOKEN | docker login ghcr.io -u yasuhiro112358 --password-stdin
+  ```
+- この設定は永続化されるため、以降の `docker compose pull` で自動的に使用される
 
 ## References
 
