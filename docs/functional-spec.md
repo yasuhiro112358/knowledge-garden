@@ -274,7 +274,7 @@ Xserver VPS (Traefik + Docker)
   - `VPS_HOST`: VPSのIPアドレスまたはホスト名
   - `VPS_USER`: SSHユーザー名
   - `VPS_SSH_KEY`: SSH秘密鍵
-  - `KNOWLEDGE_GARDEN_PATH`: このリポジトリをクローンしたVPS上のパス（例: `/opt/knowledge-garden`）
+  - `KNOWLEDGE_GARDEN_PATH`: このリポジトリをクローンしたVPS上のパス（例: `/srv/knowledge-garden`）
 
 **前提条件**:
 - VPSにこのリポジトリをクローン済み（初回のみ手動で実行）

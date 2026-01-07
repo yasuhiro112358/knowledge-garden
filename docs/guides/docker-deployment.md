@@ -108,12 +108,12 @@ docker rm knowledge-garden
    - `VPS_HOST`: VPSのIPアドレスまたはホスト名
    - `VPS_USER`: SSHユーザー名
    - `VPS_SSH_KEY`: SSH秘密鍵
-   - `KNOWLEDGE_GARDEN_PATH`: このリポジトリをクローンしたVPS上のパス（例: `/opt/knowledge-garden`）
+   - `KNOWLEDGE_GARDEN_PATH`: このリポジトリをクローンしたVPS上のパス（例: `/srv/knowledge-garden`）
 
 3. VPSにこのリポジトリをクローン（初回のみ手動で実行）
    ```bash
    ssh user@vps
-   cd /opt
+   cd /srv
    git clone https://github.com/your-username/knowledge-garden.git
    cd knowledge-garden
    ```
@@ -136,7 +136,7 @@ docker push your-dockerhub-username/knowledge-garden:latest
 
 # 3. VPSで更新
 ssh user@vps
-cd /opt/knowledge-garden  # このリポジトリをクローンしたパス
+cd /srv/knowledge-garden  # このリポジトリをクローンしたパス
 git pull origin main
 DOCKER_USERNAME=your-dockerhub-username docker compose -f compose.yaml -f compose.production.yaml pull
 DOCKER_USERNAME=your-dockerhub-username docker compose -f compose.yaml -f compose.production.yaml up -d
@@ -160,7 +160,7 @@ DOCKER_USERNAME=your-dockerhub-username docker compose -f compose.yaml -f compos
 ssh user@vps
 
 # リポジトリをクローン
-cd /opt
+cd /srv
 git clone https://github.com/your-username/knowledge-garden.git
 cd knowledge-garden
 

@@ -90,7 +90,7 @@ cat ~/.ssh/github_actions
 #### このリポジトリのパス
 
 1. **New repository secret** をクリック
-2. Name: `KNOWLEDGE_GARDEN_PATH`、Secret: このリポジトリをクローンする予定のVPS上のパス（例: `/opt/knowledge-garden`） → **Add secret**
+2. Name: `KNOWLEDGE_GARDEN_PATH`、Secret: このリポジトリをクローンする予定のVPS上のパス（例: `/srv/knowledge-garden`） → **Add secret**
 
 ### ステップ4: VPS側の初回セットアップ
 
@@ -103,8 +103,8 @@ ssh user@vps-host
 #### 4.2 リポジトリをクローン
 
 ```bash
-# リポジトリをクローン（例: /opt/knowledge-garden）
-cd /opt
+# リポジトリをクローン（例: /srv/knowledge-garden）
+cd /srv
 git clone https://github.com/your-username/knowledge-garden.git
 cd knowledge-garden
 ```
@@ -218,7 +218,7 @@ git push origin main
    ```bash
    # VPSにSSH接続して確認
    ssh user@vps-host
-   ls -la /opt/knowledge-garden
+   ls -la /srv/knowledge-garden
    ```
 3. このリポジトリが正しい場所にクローンされているか確認
    - ステップ4を再実行
