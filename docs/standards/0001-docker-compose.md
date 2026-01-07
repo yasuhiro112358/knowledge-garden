@@ -21,7 +21,7 @@ updated: 2026-01-07
   - **ファイル名は任意だが、本標準では `compose.production.yaml` を採用**する（命名規約。公式ドキュメントの表現に寄せる）。
   - 明示的にマージして使用（`-f` で指定）。イメージ固定、ラベル、再起動ポリシー等を記述。
 
-現行の `docker-compose.yml` / `docker-compose.dev.yml` は段階的に廃止（SHOULD）。
+現行の `docker-compose.yml`（または旧来の `docker-compose.*`）は段階的に廃止（SHOULD）。
 
 ## 4. 実行コマンド標準
 - ローカル開発（自動マージ）:

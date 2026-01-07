@@ -17,11 +17,11 @@
   - 本番用の上書き設定
   - 例: `image:` の固定、`restart: unless-stopped`、ラベル、プロダクション向け環境変数等
   - 本番適用時は明示的にファイル指定してマージする
-  - 重要: `.prod` は「自動で効く特別な意味」ではなく、命名慣習（自分たちの規約）です
+  - 重要: `.production` は「自動で効く特別な意味」ではなく、命名慣習（自分たちの規約）です
 
 補足（現状との対応）:
-- 現在の `docker-compose.yml` → 将来的に `compose.yaml` へ移行（ベース定義へ）
-- 現在の `docker-compose.dev.yml` → `compose.override.yaml` へ移行（ローカル自動読込）
+- 現在の `docker-compose.yml`（または類似の旧ファイル） → `compose.yaml` へ移行（ベース定義へ）
+- ローカル用の上書き → `compose.override.yaml`（自動読込）
 - CI/本番用の上書き → `compose.production.yaml`
 
 段階的な移行を推奨（まずはドキュメント合意 → 実ファイル名の置換）。
@@ -35,6 +35,8 @@
     docker compose up -d
     docker compose down
     ```
+  - アクセス:
+    - `http://localhost:${KNOWLEDGE_GARDEN_PORT:-8085}/`（`compose.override.yaml` の `ports` に従う）
 - 本番（VPS/CI）:
   - 明示マージ: `compose.yaml + compose.production.yaml`
   - 実行:

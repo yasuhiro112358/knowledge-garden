@@ -40,7 +40,7 @@ docker run -p 8080:80 knowledge-garden:local
 
 ### 2. ローカルでdocker composeで起動（開発環境用）
 
-**前提条件**: ローカルにTraefikが動作している必要があります（VPS環境を想定）
+**前提条件**: なし（ローカルではTraefikを使わず、`localhost` にポート公開して動作確認します）
 
 ```bash
 # 開発環境用（compose.override.yaml が自動読込）
@@ -57,7 +57,11 @@ docker compose logs -f
 docker compose down
 ```
 
-**注意**: `docker-compose.dev.yml`はローカルでビルドするため、Traefikネットワークに接続する必要があります。ローカルにTraefikがない場合は、上記の「1. ローカルでビルド・テスト」の方法を使用してください。
+アクセス先は `compose.override.yaml` の `ports` に従います（デフォルト: `http://localhost:8085/`）。
+ポートを変えたい場合は `KNOWLEDGE_GARDEN_PORT` を指定します:
+```bash
+KNOWLEDGE_GARDEN_PORT=8080 docker compose up -d --build
+```
 
 ### 3. 本番環境用 docker compose で起動
 
@@ -134,20 +138,20 @@ docker push your-dockerhub-username/knowledge-garden:latest
 ssh user@vps
 cd /opt/knowledge-garden  # このリポジトリをクローンしたパス
 git pull origin main
-DOCKER_USERNAME=your-dockerhub-username docker-compose pull
-DOCKER_USERNAME=your-dockerhub-username docker-compose up -d
+DOCKER_USERNAME=your-dockerhub-username docker compose -f compose.yaml -f compose.production.yaml pull
+DOCKER_USERNAME=your-dockerhub-username docker compose -f compose.yaml -f compose.production.yaml up -d
 ```
 
 ## このリポジトリだけで完結するデプロイ
 
-このリポジトリには`docker-compose.yml`が含まれており、infra-opsリポジトリに依存せずにデプロイできます。
+このリポジトリに含まれる `compose.yaml` / `compose.production.yaml` により、infra-opsリポジトリに依存せずにデプロイできます。
 
 ### compose.yaml の構成
 
 - **本番環境用** (`compose.yaml` + `compose.production.yaml`): Docker Hubからイメージをpullして使用
   - 使用例: VPSでの本番環境、GitHub Actionsからの自動デプロイ
 - **開発環境用** (`compose.override.yaml`): ローカルでビルドして使用
-  - 使用例: ローカルでの動作確認、Traefik環境でのテスト
+  - 使用例: ローカルでの動作確認（`localhost` にポート公開して確認）
 
 ### 初回セットアップ
 
@@ -163,24 +167,17 @@ cd knowledge-garden
 # 環境変数を設定（.envファイルを作成）
 echo "DOCKER_USERNAME=your-dockerhub-username" > .env
 
-# コンテナを起動
-docker-compose up -d
+# コンテナを起動（本番は明示マージ）
+docker compose -f compose.yaml -f compose.production.yaml up -d
 ```
 
-### docker-compose.ymlの構成例
+### compose.yaml / compose.production.yaml の構成例
 
 ```yaml
 # compose.yaml（ベース）
-version: '3.8'
-
 services:
   knowledge-garden:
     container_name: knowledge-garden
-    restart: unless-stopped
-
-networks:
-  traefik:
-    external: true
 ```
 
 ```yaml
@@ -188,6 +185,7 @@ networks:
 services:
   knowledge-garden:
     image: ${DOCKER_USERNAME}/knowledge-garden:latest
+    restart: unless-stopped
     networks:
       - traefik
     labels:
@@ -212,9 +210,9 @@ docker logs knowledge-garden
 # コンテナの状態を確認
 docker ps -a | grep knowledge-garden
 
-# イメージを再ビルド
-docker-compose build --no-cache
-docker-compose up -d
+# イメージを再ビルド（ローカル）
+docker compose build --no-cache
+docker compose up -d
 ```
 
 ### Traefikでルーティングされない
@@ -232,8 +230,8 @@ docker-compose up -d
 ### 画像が表示されない
 
 1. Astroの`base`設定を確認（`astro.config.mjs`）
-2. 画像パスの変換ロジックを確認（`src/utils/markdownRenderer.ts`）
-3. ビルド時に画像がコピーされているか確認：
+2. Markdown内の画像参照が `/img/...` になっているか確認（`public/img/` 配下に配置する想定）
+3. コンテナ内に `img/` が存在するか確認：
    ```bash
    docker run --rm knowledge-garden:local ls -la /usr/share/nginx/html/img
    ```
@@ -243,7 +241,7 @@ docker-compose up -d
 現在、環境変数は使用していませんが、将来的に追加可能です：
 
 ```yaml
-# docker-compose.yml
+# compose.production.yaml（例）
 services:
   knowledge-garden:
     environment:

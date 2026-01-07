@@ -1,0 +1,11 @@
+services:
+  knowledge-garden:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      # ローカル動作確認用。Traefikを使わず localhost でアクセスする
+      # 例: http://localhost:8085/
+      - "${KNOWLEDGE_GARDEN_PORT:-8085}:80"
+
+

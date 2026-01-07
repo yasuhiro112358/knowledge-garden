@@ -290,7 +290,7 @@ Xserver VPS (Traefik + Docker)
 - 初回は手動でVPSにSSH接続してリポジトリをクローンすることを推奨
 - Traefikのネットワーク設定（`traefik`）を確認
 - `docker-compose.yml`は`image`を使用（本番環境用）
-- ローカル開発時は`docker-compose.dev.yml`を使用（`build`を使用）
+- ローカル開発時は `compose.override.yaml`（自動読込）を使用（`build` を使用）
 
 ## 4. データ構造
 
