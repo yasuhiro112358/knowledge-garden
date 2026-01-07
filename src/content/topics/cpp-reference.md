@@ -338,7 +338,7 @@ void process(std::string&& str) {
 int main() {
     std::string temp = "Hello";
     process(std::move(temp));  // tempをムーブ
-    // tempは空または未定義の状態
+    // tempは「有効だが内容は未規定な状態」になる（内容が空かどうかなどに依存しないこと）
 }
 ```
 
