@@ -92,6 +92,8 @@ ssh user@vps-host
 
 #### 4.2 GHCR にログイン（Private イメージを pull するため）
 
+**重要**: これは **初回のみ手動で実行** します。GitHub Actions には含まれていません。
+
 ```bash
 # ステップ3で作成したPATを使用
 echo YOUR_GITHUB_PAT | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
@@ -100,9 +102,11 @@ echo YOUR_GITHUB_PAT | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-s
 # Login Succeeded
 ```
 
-**重要**: 
+**補足**: 
 - `YOUR_GITHUB_PAT`: ステップ3で生成したトークン
 - `YOUR_GITHUB_USERNAME`: あなたのGitHubユーザー名（例: `yasuhiro112358`）
+- この認証情報は `~/.docker/config.json` に保存され、以降の `docker compose pull` で自動的に使用されます
+- GitHub Actions からの `docker compose pull` でも、この認証情報が使われます
 
 #### 4.3 リポジトリをクローン
 
@@ -131,12 +135,19 @@ docker network create traefik
 # VPS上で実行
 cd /srv/knowledge-garden
 
-# イメージをpull（初回は存在しないのでビルドが必要）
-# まずはローカルでビルド→pushするか、GitHub Actionsを実行してください
+# 【推奨】GitHub Actionsで自動ビルド・デプロイ（初回も含む）
+# → mainブランチにpushすれば、GitHub Actionsが以下を自動実行:
+#    1. イメージをビルド
+#    2. GHCRにpush
+#    3. VPSにSSH接続
+#    4. docker compose pull & up -d
 
-# GitHub Actionsで自動ビルドされた後:
+# VPS側での手動確認（任意）:
 docker compose -f compose.yaml -f compose.production.yaml pull
 docker compose -f compose.yaml -f compose.production.yaml up -d
+
+# ログ確認
+docker compose -f compose.yaml -f compose.production.yaml logs -f
 
 # ログを確認
 docker compose -f compose.yaml -f compose.production.yaml logs -f
