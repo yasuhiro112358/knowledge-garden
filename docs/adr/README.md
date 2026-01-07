@@ -15,6 +15,7 @@ ADR（Architecture Decision Record）は、アーキテクチャの重要な決�
 | [0003](./0003-use-vps-with-traefik-and-docker.md) | VPS（Traefik + Docker）でのホスティング | Accepted | 2025-01 |
 | [0004](./0004-use-markdown-for-content-format.md) | Markdownをコンテンツ形式として採用 | Accepted | 2025-01 |
 | [0005](./0005-organize-guides-in-docs-guides-folder.md) | 手順書を`docs/guides/`フォルダに統合 | Accepted | 2025-01 |
+| [0006](./0006-select-container-registry.md) | コンテナレジストリの選定（Docker Hub / GHCR など） | Proposed | 2026-01 |
 
 ## ADRの形式
 
