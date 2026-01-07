@@ -9,6 +9,7 @@
 
 ### デプロイ・運用
 - [Docker + Traefik 運用ガイド](./docker-deployment.md) - Dockerコンテナでの運用方法
+- [Docker Compose 開発標準](./docker-compose-standards.md) - Composeファイル構成と運用ルール
 - [GitHub Actions自動デプロイセットアップ](./github-actions-setup-guide.md) - GitHub Actionsを使った自動デプロイの初回セットアップ手順
 
 ## ドキュメントの分類

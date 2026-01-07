@@ -4,6 +4,8 @@
 
 Knowledge GardenをDockerコンテナとして運用し、Traefikでルーティングする構成です。
 
+関連: [Docker Compose 開発標準](./docker-compose-standards.md)
+
 ## 前提条件
 
 - VPSでTraefikが既に動作している
@@ -36,36 +38,34 @@ docker run -p 8080:80 knowledge-garden:local
    ```
 3. **一時的な解決策**: ブラウザのアドレスバーでポート番号を手動で追加する
 
-### 2. ローカルでdocker-composeで起動（開発環境用）
+### 2. ローカルでdocker composeで起動（開発環境用）
 
 **前提条件**: ローカルにTraefikが動作している必要があります（VPS環境を想定）
 
 ```bash
-# 開発環境用（docker-compose.dev.ymlを使用）
+# 開発環境用（compose.override.yaml が自動読込）
 # ローカルでビルドして起動
-docker-compose -f docker-compose.dev.yml up -d
+docker compose up -d
 
 # ビルドを再実行する場合
-docker-compose -f docker-compose.dev.yml up -d --build
+docker compose up -d --build
 
 # ログを確認
-docker-compose -f docker-compose.dev.yml logs -f
+docker compose logs -f
 
 # 停止
-docker-compose -f docker-compose.dev.yml down
+docker compose down
 ```
 
 **注意**: `docker-compose.dev.yml`はローカルでビルドするため、Traefikネットワークに接続する必要があります。ローカルにTraefikがない場合は、上記の「1. ローカルでビルド・テスト」の方法を使用してください。
 
-### 3. 本番環境用docker-composeで起動
+### 3. 本番環境用 docker compose で起動
 
 ```bash
 # サブドメイン方式（knowledge.newtralize.com）
-# Docker Hubからイメージをpullして使用
-docker-compose up -d
-
-# サブディレクトリ方式（newtralize.com/knowledge）
-docker-compose -f docker-compose.subdirectory.yml up -d
+# compose.yaml + compose.production.yaml をマージして起動
+docker compose -f compose.yaml -f compose.production.yaml pull
+docker compose -f compose.yaml -f compose.production.yaml up -d
 ```
 
 ### 4. ログの確認
@@ -75,17 +75,17 @@ docker-compose -f docker-compose.subdirectory.yml up -d
 docker logs knowledge-garden
 docker logs -f knowledge-garden  # リアルタイムでログを確認
 
-# docker-composeを使用している場合
-docker-compose logs -f
-docker-compose -f docker-compose.dev.yml logs -f  # 開発環境用
+# docker compose を使用している場合
+docker compose logs -f
+docker compose logs -f  # 開発環境用
 ```
 
 ### 5. コンテナの停止・削除
 
 ```bash
-# docker-composeを使用している場合
-docker-compose down
-docker-compose -f docker-compose.dev.yml down  # 開発環境用
+# docker compose を使用している場合
+docker compose down
+docker compose down  # 開発環境用
 
 # 直接dockerコマンドを使用している場合
 docker stop knowledge-garden
@@ -142,11 +142,11 @@ DOCKER_USERNAME=your-dockerhub-username docker-compose up -d
 
 このリポジトリには`docker-compose.yml`が含まれており、infra-opsリポジトリに依存せずにデプロイできます。
 
-### docker-compose.ymlの構成
+### compose.yaml の構成
 
-- **本番環境用** (`docker-compose.yml`): Docker Hubからイメージをpullして使用
+- **本番環境用** (`compose.yaml` + `compose.production.yaml`): Docker Hubからイメージをpullして使用
   - 使用例: VPSでの本番環境、GitHub Actionsからの自動デプロイ
-- **開発環境用** (`docker-compose.dev.yml`): ローカルでビルドして使用
+- **開発環境用** (`compose.override.yaml`): ローカルでビルドして使用
   - 使用例: ローカルでの動作確認、Traefik環境でのテスト
 
 ### 初回セットアップ
@@ -170,14 +170,24 @@ docker-compose up -d
 ### docker-compose.ymlの構成例
 
 ```yaml
-# docker-compose.yml（本番環境用）
+# compose.yaml（ベース）
 version: '3.8'
 
 services:
   knowledge-garden:
-    image: ${DOCKER_USERNAME}/knowledge-garden:latest
     container_name: knowledge-garden
     restart: unless-stopped
+
+networks:
+  traefik:
+    external: true
+```
+
+```yaml
+# compose.production.yaml（本番用の上書き）
+services:
+  knowledge-garden:
+    image: ${DOCKER_USERNAME}/knowledge-garden:latest
     networks:
       - traefik
     labels:
@@ -187,12 +197,7 @@ services:
       - traefik.http.routers.knowledge-garden.tls=true
       - traefik.http.routers.knowledge-garden.tls.certresolver=le
       - traefik.http.services.knowledge-garden.loadbalancer.server.port=80
-      # その他のラベルは docker-compose.yml を参照
-
-networks:
-  traefik:
-    external: true
-```
+      # その他のラベルは compose.production.yaml を参照
 
 **注意**: このリポジトリは独立して動作します。infra-opsリポジトリへの統合は不要です。
 

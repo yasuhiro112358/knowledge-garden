@@ -678,7 +678,7 @@ docker-compose ps
 **実際の運用例：**
 ```bash
 # 本番環境での起動
-docker-compose -f docker-compose.prod.yml up -d
+docker compose -f compose.yaml -f compose.production.yaml up -d
 
 # サービス状態確認
 docker-compose ps
@@ -719,7 +719,7 @@ docker-compose down --remove-orphans
 docker-compose kill
 
 # プロダクションファイル指定での停止
-docker-compose -f docker-compose.prod.yml down
+docker compose -f compose.yaml -f compose.production.yaml down
 ```
 
 **stopとdownの違い：**
