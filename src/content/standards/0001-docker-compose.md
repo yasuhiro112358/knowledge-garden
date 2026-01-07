@@ -2,7 +2,7 @@
 title: Docker Compose Standard
 status: Active
 version: v1.0
-updated: 2026-01-07
+updated: "2026-01-07"
 tags: ["standards","docker","compose"]
 ---
 
