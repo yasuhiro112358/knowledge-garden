@@ -202,11 +202,29 @@ const posts = await getCollection('blog');
 ```
 
 ## Markdown/MDX
-- MDX を使う場合
+
+### MDXとは
+
+MDX（Markdown + JSX）は、MarkdownにJSX（Reactコンポーネント）を埋め込める形式です。通常のMarkdownに加えて、インタラクティブなコンポーネントを使用できます。
+
+### AstroとMDXの関係
+
+AstroはMDXを**ネイティブサポート**しており、以下の方法で使用できます：
+
+1. **ページとして直接使用**: `src/pages/notes.mdx` を作成すれば `/notes` で閲覧可能
+2. **Content Collectionsで使用**: `src/content/blog/post.mdx` として管理可能
+3. **Reactコンポーネントを埋め込み**: MDX内でReactコンポーネントを使用可能
+
+### セットアップ
+
+MDXを使う場合、`@astrojs/mdx` 統合を追加します：
+
 ```bash
 npm i -D @astrojs/mdx
 ```
-- `astro.config.mjs`
+
+`astro.config.mjs` に統合を追加：
+
 ```js
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
@@ -215,7 +233,94 @@ export default defineConfig({
   integrations: [mdx()],
 });
 ```
-- `src/pages/notes.mdx` を作成すれば `/notes` で閲覧可能
+
+### 使用例
+
+#### 1. ページとして使用
+
+`src/pages/notes.mdx` を作成：
+
+```mdx
+---
+title: "MDXの例"
+---
+
+# MDXの例
+
+これは通常のMarkdownです。
+
+<Counter client:load />
+```
+
+#### 2. Content Collectionsで使用
+
+`src/content/config.ts` でMDXを定義：
+
+```ts
+import { defineCollection, z } from 'astro:content';
+
+const blog = defineCollection({
+  type: 'content',
+  schema: z.object({
+    title: z.string(),
+  }),
+});
+
+export const collections = { blog };
+```
+
+`src/content/blog/post.mdx` を作成：
+
+```mdx
+---
+title: "MDXブログ記事"
+---
+
+# MDXブログ記事
+
+<MyComponent />
+```
+
+#### 3. Reactコンポーネントの使用
+
+MDX内でReactコンポーネントを使用する場合、`client:` ディレクティブが必要です：
+
+```mdx
+---
+import Counter from '../components/Counter.jsx';
+---
+
+# カウンターの例
+
+<Counter client:load />
+```
+
+### MDXと通常のMarkdownの違い
+
+| 機能 | Markdown | MDX |
+|------|----------|-----|
+| 基本的な記述 | ✅ | ✅ |
+| JSXコンポーネント | ❌ | ✅ |
+| インタラクティブ要素 | ❌ | ✅ |
+| カスタムコンポーネント | ❌ | ✅ |
+
+### 使用するべき場合
+
+**MDXを使うべき場合**:
+- インタラクティブなコンテンツが必要（チャート、フォーム等）
+- Reactコンポーネントを埋め込みたい
+- 動的な要素を含むドキュメント
+
+**通常のMarkdownで十分な場合**:
+- シンプルなテキストコンテンツ
+- 静的コンテンツのみ
+- コンポーネントが不要
+
+### 注意点
+
+- MDX内でAstroコンポーネント（`.astro`）は直接使用できません（Reactコンポーネントのみ）
+- `client:` ディレクティブが必要（クライアント側で実行するため）
+- ビルド時に処理されるため、サーバーサイドの処理はできません
 
 ## よく使うインテグレーション
 ```bash
