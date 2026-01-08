@@ -8,6 +8,58 @@ Tailwind は **PostCSS プラグイン**として実装されているため、�
 - 役割は Gulp / Webpack / Vite とは異なり、あくまで CSS の AST 変換
 - Tailwind 自体が PostCSS プラグインなので、Tailwind を使う = PostCSS を内部的に使う という構図
 
+## @tailwind ディレクティブとは
+
+Tailwind CSSでは、CSSファイル内で `@tailwind` ディレクティブを使用して、Tailwindのスタイルを読み込みます。
+
+### 3つのディレクティブ
+
+```css
+@tailwind base;      /* ベーススタイル（リセットCSS、デフォルトスタイル） */
+@tailwind components; /* コンポーネントクラス（カスタムコンポーネント用） */
+@tailwind utilities;  /* ユーティリティクラス（flex, text-xl など） */
+```
+
+### @tailwind base とは
+
+`@tailwind base` は、**ベーススタイル**を読み込むディレクティブです。
+
+**含まれる内容**:
+- **CSSリセット**: ブラウザのデフォルトスタイルをリセット
+- **デフォルトスタイル**: `html`, `body` などの基本要素のスタイル
+- **フォント設定**: `html` 要素に `font-sans` が自動適用される（`fontFamily.sans` の設定を使用）
+
+**例**:
+```css
+/* @tailwind base が生成するスタイル（概念） */
+html {
+  font-family: system-ui, sans-serif; /* tailwind.config.mjs の fontFamily.sans を使用 */
+}
+body {
+  margin: 0;
+  /* ... リセットCSS ... */
+}
+```
+
+### Astroでの扱い
+
+Astroで `@astrojs/tailwind` を使用している場合、**これらのディレクティブは自動的に処理されます**。明示的にCSSファイルに書く必要はありません。
+
+- `@astrojs/tailwind` が内部的に `@tailwind base`, `@tailwind components`, `@tailwind utilities` を処理
+- `tailwind.config.mjs` の設定（例: `fontFamily.sans`）が `@tailwind base` に反映される
+- そのため、`<html>` タグに `font-sans` クラスを追加しなくても、自動的にフォントが適用される
+
+### 手動で使用する場合
+
+もし `@astrojs/tailwind` を使わず、手動でTailwindを設定する場合は、CSSファイルに明示的に書く必要があります：
+
+```css
+/* src/styles/global.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
 ### よくあるプラグイン例
 | プラグイン | 目的 |
 |------------|------|
@@ -90,6 +142,91 @@ module.exports = {
 ↓いいえ
 Autoprefixer 入れる
 ```
+
+## @tailwindcss/typography プラグイン
+
+### 概要
+
+`@tailwindcss/typography` は、ブログやドキュメントなどの**文章コンテンツ**を読みやすくスタイリングするためのTailwind CSSプラグインです。
+
+### 何をするのか
+
+`prose` クラスを適用すると、以下の要素が自動的にスタイリングされます：
+
+- **見出し**（h1, h2, h3...）: 適切なサイズ、余白、太さ
+- **段落**（p）: 行間、余白
+- **リスト**（ul, ol, li）: インデント、マーカー
+- **コードブロック**（pre, code）: 背景色、フォント
+- **引用**（blockquote）: 左ボーダー、イタリック
+- **リンク**（a）: 色、ホバー効果
+- **画像**（img）: 最大幅、角丸
+- **テーブル**（table）: ボーダー、パディング
+
+### セットアップ
+
+```bash
+npm install -D @tailwindcss/typography
+```
+
+`tailwind.config.mjs` にプラグインを追加：
+
+```js
+export default {
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
+};
+```
+
+### 使用方法
+
+```astro
+<!-- 基本的な使用 -->
+<div class="prose">
+  <Content />
+</div>
+
+<!-- 色テーマを指定（スレート色） -->
+<div class="prose prose-slate">
+  <Content />
+</div>
+
+<!-- サイズを指定（大きめ） -->
+<div class="prose prose-slate prose-lg">
+  <Content />
+</div>
+
+<!-- 最大幅を制限しない（コンテナ幅いっぱい） -->
+<div class="prose prose-slate max-w-none">
+  <Content />
+</div>
+```
+
+### なぜ便利なのか
+
+1. **コード量の削減**: 70行以上のCSSを1行のクラスに置き換え可能
+2. **一貫性**: 標準的なタイポグラフィスタイルを自動適用
+3. **カスタマイズ可能**: サイズや色テーマのバリエーションが豊富
+4. **保守性**: プラグインが更新されれば、自動的に改善される
+
+### 使用するべき場合
+
+- ✅ ブログ、ドキュメントサイト
+- ✅ Markdownコンテンツの表示
+- ✅ 長文コンテンツのスタイリング
+- ✅ 一貫したタイポグラフィが必要な場合
+
+### 注意点
+
+- `prose` クラスはTailwind CSSの標準機能ではなく、**プラグインが提供するクラス**
+- プラグインをインストール・設定しないと使用できない
+- Tailwind CSS v3 では `@tailwindcss/typography@^0.5.15` 以降を使用
+
+### 参考
+
+- [@tailwindcss/typography 公式ドキュメント](https://tailwindcss.com/docs/plugins/typography)
+
+---
 
 ## 参考
 - Tailwind Docs: https://tailwindcss.com/docs/installation
