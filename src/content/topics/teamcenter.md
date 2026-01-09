@@ -183,7 +183,12 @@ CADファイルやドキュメントなど、実際のファイルを格納す�
 | ファイルが開けない | FMSサーバー障害 | FMSサーバーの状態を確認 |
 | 同期が遅い | ネットワーク帯域不足 | 同期スケジュールの調整 |
 
-## 参考リンク
+## 情報源について
 
-- [Siemens Teamcenter 公式サイト](https://www.sw.siemens.com/ja-JP/technology/plm/teamcenter/)
-- [Siemens Community](https://community.sw.siemens.com/)
+このドキュメントの内容は、Siemens Teamcenterに関する一般的な知識に基づいています。最新かつ正確な情報については、以下の公式リソースを直接ご確認ください：
+
+- Siemens公式サイトで「Teamcenter」を検索
+- Siemens PLM製品のドキュメント
+- Teamcenterの管理者・ユーザーマニュアル
+
+**注意**: 製品の仕様やアーキテクチャはバージョンによって異なる場合があります。導入・運用時は必ず公式ドキュメントを参照してください。
