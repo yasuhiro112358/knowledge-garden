@@ -20,10 +20,10 @@ const standards = all.sort((a, b) =>
         return (
           <a
             href={`/standards/${s.slug}`}
-            class="block p-5 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all"
+            class="block p-5 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg transition-all"
           >
             <h2 class="font-semibold text-lg mb-1">{title}</h2>
-            <p class="text-sm text-gray-600">
+            <p class="text-sm text-gray-600 dark:text-gray-400">
               {status && <span class="mr-2">Status: {status}</span>}
               {version && <span>Version: {version}</span>}
             </p>
