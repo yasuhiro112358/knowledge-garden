@@ -20,15 +20,15 @@ const date = note.data.date || note.slug;
   <article>
     <header class="mb-8">
       <h1 class="text-4xl font-bold mb-2">{title}</h1>
-      <p class="text-gray-600">{date}</p>
+      <p class="text-gray-600 dark:text-gray-400">{date}</p>
     </header>
-    <div class="prose prose-slate max-w-none">
+    <div class="prose prose-slate dark:prose-invert max-w-none">
       <Content />
     </div>
-    <footer class="mt-12 pt-8 border-t border-gray-200">
+    <footer class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
       <a
         href="/daily"
-        class="text-blue-600 hover:underline"
+        class="text-blue-600 dark:text-blue-400 hover:underline"
       >
         ← 日次ノート一覧に戻る
       </a>

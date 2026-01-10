@@ -13,32 +13,47 @@ const { title, description = '個人的な学習メモとナレッジベース' 
     <meta charset="UTF-8" />
     <meta name="description" content={description} />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style is:inline>
+      /* ダークモード時の初期背景色を設定してフラッシュを防ぐ */
+      html {
+        background-color: #f9fafb;
+      }
+      @media (prefers-color-scheme: dark) {
+        html {
+          background-color: #111827;
+        }
+        body {
+          background-color: #111827;
+          color: #f9fafb;
+        }
+      }
+    </style>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
     <title>{title} | Knowledge Garden</title>
   </head>
-  <body class="bg-gray-50 text-gray-900">
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+  <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
       <nav class="max-w-4xl mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
-          <a href="/" class="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors">
+          <a href="/" class="text-xl font-bold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
             🌱 Knowledge Garden
           </a>
           <div class="flex gap-4">
-            <a href="/topics" class="text-gray-700 hover:text-blue-600 transition-colors">
+            <a href="/topics" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               トピック
             </a>
-            <a href="/daily" class="text-gray-700 hover:text-blue-600 transition-colors">
+            <a href="/daily" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               日次ノート
             </a>
-            <a href="/standards" class="text-gray-700 hover:text-blue-600 transition-colors">
+            <a href="/standards" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               Standards
             </a>
             <a
               href="https://github.com/yasuhiro112358/knowledge-garden"
               target="_blank"
               rel="noopener noreferrer"
-              class="text-gray-700 hover:text-blue-600 transition-colors"
+              class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               GitHub
             </a>
@@ -51,11 +66,11 @@ const { title, description = '個人的な学習メモとナレッジベース' 
       <slot />
     </main>
 
-    <footer class="bg-white border-t border-gray-200 mt-16">
-      <div class="max-w-4xl mx-auto px-4 py-8 text-center text-gray-600">
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-16">
+      <div class="max-w-4xl mx-auto px-4 py-8 text-center text-gray-600 dark:text-gray-400">
         <p>
-          Built with <a href="https://astro.build" class="text-blue-600 hover:underline">Astro</a> • 
-          <a href="https://github.com/yasuhiro112358/knowledge-garden" class="text-blue-600 hover:underline">View on GitHub</a>
+          Built with <a href="https://astro.build" class="text-blue-600 dark:text-blue-400 hover:underline">Astro</a> • 
+          <a href="https://github.com/yasuhiro112358/knowledge-garden" class="text-blue-600 dark:text-blue-400 hover:underline">View on GitHub</a>
         </p>
       </div>
     </footer>
