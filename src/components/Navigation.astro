@@ -1,0 +1,122 @@
+---
+---
+
+<nav class="max-w-4xl mx-auto px-4 py-4">
+  <!-- モバイル用: ハンバーガーメニュー + サイト名中央 -->
+  <div class="md:hidden flex items-center">
+    <button
+      id="mobile-menu-toggle"
+      class="p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+      aria-label="メニューを開く"
+      aria-expanded="false"
+    >
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path id="menu-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        <path id="close-icon" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+    <div class="flex-1 text-center">
+      <a href="/" class="text-xl font-bold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+        🌱 Knowledge Garden
+      </a>
+    </div>
+    <div class="w-10"></div> <!-- 中央揃えのためのスペーサー -->
+  </div>
+
+  <!-- モバイルメニュー（オーバーレイ） -->
+  <div
+    id="mobile-menu"
+    class="hidden fixed inset-0 top-[73px] bg-white dark:bg-gray-800 z-40 md:hidden"
+  >
+    <div class="flex flex-col p-4 space-y-4">
+      <a
+        href="/topics"
+        class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
+      >
+        Topics
+      </a>
+      <a
+        href="/standards"
+        class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
+      >
+        Standards
+      </a>
+      <a
+        href="/daily"
+        class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
+      >
+        Blog
+      </a>
+    </div>
+  </div>
+
+  <!-- デスクトップ用: サイト名左 + メニュー右 -->
+  <div class="hidden md:flex items-center justify-between">
+    <a href="/" class="text-xl font-bold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+      🌱 Knowledge Garden
+    </a>
+    <div class="flex gap-4">
+      <a href="/topics" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+        Topics
+      </a>
+      <a href="/standards" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+        Standards
+      </a>
+      <a href="/daily" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+        Blog
+      </a>
+    </div>
+  </div>
+</nav>
+
+<script>
+  (function() {
+    const toggle = document.getElementById('mobile-menu-toggle');
+    const menu = document.getElementById('mobile-menu');
+    const menuIcon = document.getElementById('menu-icon');
+    const closeIcon = document.getElementById('close-icon');
+
+    if (!toggle || !menu || !menuIcon || !closeIcon) return;
+
+    function toggleMenu() {
+      if (!menu || !menuIcon || !closeIcon || !toggle) return;
+      
+      const isOpen = !menu.classList.contains('hidden');
+      
+      if (isOpen) {
+        // メニューを閉じる
+        menu.classList.add('hidden');
+        menuIcon.classList.remove('hidden');
+        closeIcon.classList.add('hidden');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', 'メニューを開く');
+        document.body.style.overflow = '';
+      } else {
+        // メニューを開く
+        menu.classList.remove('hidden');
+        menuIcon.classList.add('hidden');
+        closeIcon.classList.remove('hidden');
+        toggle.setAttribute('aria-expanded', 'true');
+        toggle.setAttribute('aria-label', 'メニューを閉じる');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    toggle.addEventListener('click', toggleMenu);
+
+    // メニュー内のリンクをクリックしたらメニューを閉じる
+    const menuLinks = menu.querySelectorAll('a');
+    menuLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        if (menu && menuIcon && closeIcon && toggle) {
+          menu.classList.add('hidden');
+          menuIcon.classList.remove('hidden');
+          closeIcon.classList.add('hidden');
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.setAttribute('aria-label', 'メニューを開く');
+          document.body.style.overflow = '';
+        }
+      });
+    });
+  })();
+</script>
